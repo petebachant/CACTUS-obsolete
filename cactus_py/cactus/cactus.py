@@ -129,6 +129,7 @@ class PerfCurve(object):
         plt.plot(data["tsr"], data["cp"], '-o')
         plt.xlabel(r"$\lambda$")
         plt.ylabel(r"$C_P$")
+		plt.show()
     
     
 if __name__ == "__main__":
