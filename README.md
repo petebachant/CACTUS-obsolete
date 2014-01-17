@@ -1,6 +1,6 @@
 CACTUS
 ======
-CACTUS: Code for Axial- and Cross-flow TUrbine Simulation
+![CACTUS](http://energy.sandia.gov/wp/wp-content/gallery/uploads/cactusHeader.png)
 
 Copyright (c) 2013, Sandia Corporation.  Under the terms of Contract
 DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
