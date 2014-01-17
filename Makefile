@@ -72,4 +72,4 @@ clean :
 	rm -f $(MODDIR)/*.mod
 	rm -f $(MODUTILDIR)/*.mod
 	rm -f $(MODUTILDIR)/*.o
-	rm -f ./build/cactus.exe
+	rm -f -r ./build
