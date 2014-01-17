@@ -36,12 +36,13 @@ Usage
 =====
 Linux
 -----
-  * cd into project director
+  * cd into project directory
+  * Run `cactus InputFileName.in`
 
 Windows
 -------
   * Open MinGW bash in project directory (where the `*.in` file is located)
-  * Run `cactus project_name.in`
+  * Run `cactus InputFileName.in`
   
   
 Python interface
