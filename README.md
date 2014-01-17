@@ -1,5 +1,3 @@
-CACTUS
-======
 ![CACTUS](http://energy.sandia.gov/wp/wp-content/gallery/uploads/cactusHeader.png)
 
 Copyright (c) 2013, Sandia Corporation.  Under the terms of Contract
