@@ -9,6 +9,7 @@ import pandas as pd
 import subprocess
 import os
 import json
+import geom
 
 # Translation dictionary for quantities printed in CSV file
 quantities = {"t" : " Normalized Time (-)",
@@ -71,7 +72,7 @@ def get_mean_cp(casename):
     meancp = np.mean(cp[len(cp)/2:])
     return meancp
     
-def write_input_file(name, casedict=case_defaults, configdict=config_defaults):
+def write_input_file(name, casedict, configdict):
     casedict["jbtitle"] = name
     with open(name+".in", "w") as f:
         f.write("&ConfigInputs\n")
@@ -97,7 +98,158 @@ def runcase(name):
     elif os.name == "posix":
         cm = "cactus " + name + ".in"
     subprocess.call(cm)
+    
 
+class Case(object):
+    """
+    A CACTUS case object for running a single simulation.
+    
+    Default geometry files will be same as case name and in same directory.
+    """
+    def __init__(self, name, loadconfig=False):
+        self.name = name
+        # Default numerical configuration parameters
+        self.GPFlag = 0
+        self.nr = 10
+        self.nti = 16
+        self.convrg = 0.0001
+        self.iut = 0
+        self.ifc = 0
+        self.ixterm = 0
+        self.ntif = 16
+        self.iutf = 1
+        self.nric = 9
+        self.convrgf = 0.0001
+        self.diag_out_flag = 1
+        self.output_el_flag = 1
+        # Default case configuration parameters
+        self.rho = 0.002378
+        self.viscosity = 0.3739E-6
+        self.tempr = 60.0
+        self.hBLRef = 56.57
+        self.slex = 0.0
+        self.hAG = 30.0
+        self.rpm = 70.0
+        self.tsr = 4.0
+        self.nSect = 1
+        self.geomfile = name + ".geom"
+        self.foil_data_file = "../../Airfoil_Section_Data/NACA_0015.dat"
+        self.setconfig()
+    def creategeom(self):
+        """Create new geometry file."""
+        pass
+    def loadconfig(self):
+        """loads a configuration file with the same name as the case, 
+        inside the same directory."""
+        with open(self.name + ".in", "r") as f:
+            for line in f.readlines():
+                if "=" in line:
+                    i = line.split()[0]
+                    v = line.split()[-1]
+                    if i == "GPFlag": 
+                        self.GPFlag = int(v)
+                    elif i == "nr":
+                        self.nr = int(v)
+                    elif i == "nti":
+                        self.nti = int(v)
+                    elif i == "convrg":
+                        self.convrg = float(v)
+                    elif i == "iut":
+                        self.iut = int(v)
+                    elif i == "ifc":
+                        self.ifc = int(v)
+                    elif i == "ixterm":
+                        self.ixterm = int(v)
+                    elif i == "ntif":
+                        self.ntif = int(v)
+                    elif i == "iutf":
+                        self.iutf = int(v)
+                    elif i == "nric":
+                        self.nric = int(v)
+                    elif i == "convrgf":
+                        self.convrgf = float(v)
+                    elif i == "DiagOutFlag":
+                        self.diag_out_flag = int(v)
+                    elif i == "Output_ELFlag":
+                        self.output_el_flag = int(v)
+                    elif i == "rho":
+                        self.rho = float(v)
+                    elif i == "vis":
+                        self.viscosity = float(v)
+                    elif i == "tempr":
+                        self.tempr = float(v)
+                    elif i == "hBLRef":
+                        self.hBLRef = float(v)
+                    elif i == "slex":
+                        self.slex = float(v)
+                    elif i == "hAG":
+                        self.hAG = float(v)
+                    elif i == "RPM":
+                        self.rpm = float(v)
+                    elif i == "Ut":
+                        self.tsr = float(v)
+                    elif i == "GeomFilePath":
+                        self.geomfile = v
+                    elif i == "nSect":
+                        self.nSect = int(v)
+                    elif i == "AFDPath":
+                        self.foil_data_file = v
+        self.setconfig()
+    def setconfig(self):
+        """Sets configuration dictionaries and writes input file."""
+        self.numconfig = {"GPFlag" : self.GPFlag,
+                          "nr" : self.nr,
+                          "nti" : self.nti,
+                          "convrg" : self.convrg,
+                          "iut" : self.iut,
+                          "ifc" : self.ifc,
+                          "ixterm" : self.ixterm,
+                          "ntif" : self.ntif,
+                          "iutf" : self.iutf,
+                          "nric" : self.nric,
+                          "convrgf" : self.convrgf,
+                          "DiagOutFlag" : self.diag_out_flag,
+                          "Output_ELFlag" : self.output_el_flag}
+        self.caseconfig = {"jbtitle" : self.name,
+                           "rho" : self.rho,
+                           "vis" : self.viscosity,
+                           "tempr" : self.tempr,
+                           "hBLRef" : self.hBLRef,
+                           "slex" : self.slex,
+                           "hAG" : self.hAG,
+                           "RPM" : self.rpm,
+                           "Ut" : self.tsr,
+                           "GeomFilePath" : self.geomfile,
+                           "nSect" : 1,
+                           "AFDPath" : self.foil_data_file}
+    def writeconfig(self):
+        self.setconfig()
+        with open(self.name+".in", "w") as f:
+            f.write("&ConfigInputs\n")
+            for key, value in self.numconfig.iteritems():
+                f.write("\t" + key + " = " + str(value) + "\n")
+            f.write("/End\n")
+            f.write("&CaseInputs\n")
+            for key, value in self.caseconfig.iteritems():
+                if "title" in key or "Path" in key:
+                    f.write("\t" + key + " = '" + str(value) + "'\n")
+                else:
+                    f.write("\t" + key + " = " + str(value) + "\n")
+            f.write("/End\n")
+    def calc_cp(self):
+        """Returns average power coefficient."""
+        pass
+    def run(self):
+        if self.inputfile == None:
+            raise RuntimeError("No input file")
+        if os.name == "nt":
+            cm = 'C:/MinGW/msys/1.0/bin/bash.exe --login -c "cd \''
+            cm += os.getcwd().replace('\\', '/') 
+            cm += '\' ; cactus ' + self.name + ".in\""
+        elif os.name == "posix":
+            cm = "cactus " + self.name + ".in"
+        subprocess.call(cm)
+    
 
 class PerfCurve(object):
     def __init__(self, name):
@@ -126,7 +278,7 @@ class PerfCurve(object):
         self.slex = 0.0
         self.hAG = 30.0
         self.RPM = 70
-        self.GeomFilePath = "../TestGeom/TestHAWT.geom"
+        self.GeomFilePath = name+".geom"
         self.nSect = 1
         self.AFDPath = "../../Airfoil_Section_Data/NACA_0015.dat"
     def setconfig(self):
@@ -182,9 +334,12 @@ class PerfCurve(object):
     
     
 if __name__ == "__main__":
-    os.chdir("../../Test/TestCase2")
-    plt.close("all")
-    pc = PerfCurve("TestVAWT2")
-    pc.GeomFilePath = "../TestGeom/TestVAWT.geom"
-    pc.run(2.0, 4.0, 0.5)
-    pc.plot()
+#    os.chdir("../../Test/TestCase2")
+#    plt.close("all")
+#    pc = PerfCurve("TestVAWT2")
+#    pc.GeomFilePath = "../TestGeom/TestVAWT.geom"
+#    pc.run(2.0, 4.0, 0.5)
+#    pc.plot()
+    case = Case("test")
+#    case.writeconfig()
+    case.loadconfig()
