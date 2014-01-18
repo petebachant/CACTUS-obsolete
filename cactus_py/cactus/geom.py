@@ -1,9 +1,25 @@
 """
-This module contains classes for constructing turbine geometry
-It replaces the entire /CreateGeom folder of *.m files
+This module contains classes for constructing turbine geometry.
+It replaces the /CreateGeom folder of *.m files
 """
 from numpy import zeros, ones, sqrt, pi, sin, cos
 import numpy as np
+
+vawt_defaults = {"REqR" : 1.0,
+                 "CR" : 0.07408,
+                 "HR" : 2.64,
+                 "eta" : 0.42,
+                 "BShape" : "parabolic",
+                 "CRs" : 0.07408,
+                 "TCs" : 0.15}
+hawt_defaults = {"RMaxR" : 1.0,
+                 "HubRR" : 0.0334,
+                 "CR" : [0.0394, 0.1332, 0.1133, 0.0926, 0.0759, 0.0551],
+                 "bTwist" : [0.0 ,20.0, 4.715, 0.494, -0.92, -2.5],
+                 "bi" : 8.5,
+                 "eta" : 0.3,
+                 "bCone" : 0.0,
+                 "Tilt" : 0.0}
 
 def quatrot(v, theta, nR, origin):
     """Perform rotation of vector(s) v around normal vector nR using the
@@ -302,7 +318,7 @@ class Turbine(object):
             HR:   Turbine height to equitorial radius ratio
             eta:  Blade mount point ratio ((distance behind leading edge of 
                   the blade mount point) / (chord))
-            BShape: 0 for straight blades, 1 for parabolic blades
+            BShape: "parabolic" for parabolic blades, None for straight
             CRs:  Strut chord to equitorial radius ratio (only used if 
                   n_strut > 0)
             TCs:  Strut thickness to chord ratio (only used if n_strut > 0)
@@ -364,11 +380,11 @@ class Turbine(object):
             CR = CR*REqR
             HR = HR*REqR
             # Set rotation axis along y
-            self.RotN = [0,1,0]
-            self.RotP = [0,0,0]
+            self.rot_n = [0.0, 1.0, 0.0]
+            self.rot_p = [0.0, 0.0, 0.0]
             # Radius ratio function
             yB = np.linspace(0, HR, n_belem+1)
-            if BShape:
+            if BShape == "parabolic":
                 # parabolic blades
                 rr = REqR*(1.0 - 4.0*(yB/HR - 0.5)**2)
                 # Frontal area normalized by ref_r^2
@@ -404,7 +420,7 @@ class Turbine(object):
             Phase = np.linspace(0, 2*pi, n_blade+1)
             for i in range(1, n_blade):
                 self.blades[i] = self.blades[0]
-                self.blades[i].rotate(Phase[i], self.RotN, self.RotP)
+                self.blades[i].rotate(Phase[i], self.rot_n, self.rot_p)
             # Fill struts on first blade
             if float(n_strut) % n_blade != 0:
                 raise RuntimeError('Number of struts must be a multiple of the\
@@ -435,7 +451,7 @@ class Turbine(object):
                 for j in range(NSpB):
                     SInd = i*NSpB + j
                     self.struts[SInd] = self.struts[j]
-                    self.struts[SInd].rotate(Phase[i], self.RotN, self.RotP)
+                    self.struts[SInd].rotate(Phase[i], self.rot_n, self.rot_p)
                     self.struts[SInd].BIndE = i
 
         elif self.turb_type=='HAWT':
@@ -444,8 +460,8 @@ class Turbine(object):
                 raise RuntimeError('Not enough inputs for selected turbine type')
             RMaxR = kwargs["RMaxR"]
             HubRR = kwargs["HubRR"]
-            CR = kwargs["CR"]
-            bTwist = kwargs["bTwist"]
+            CR = np.array(kwargs["CR"])
+            bTwist = np.array(kwargs["bTwist"])
             bi = kwargs["bi"]
             eta = kwargs["eta"]
             bCone = kwargs["bCone"]
@@ -456,8 +472,10 @@ class Turbine(object):
             HubRR = HubRR*RMaxR
             
             # Set rotation axis along x
-            self.RotN = [1,0,0]
-            self.RotP = [0,0,0]
+            self.rot_n = np.array([1.0, 0.0, 0.0])
+            self.rot_p = np.array([0.0, 0.0, 0.0])
+            
+            print np.shape(self.rot_n)
             
             # Radius ratio function
             rB = np.linspace(HubRR, RMaxR, n_belem+1)
@@ -466,15 +484,15 @@ class Turbine(object):
         
             # Fill element end data for first blade
             deltac = (eta - 0.25)*CR[0]
-            self.blades[0].QCx = zeros(1,n_belem+1)
-            self.blades[0].QCy = rB
+            self.blades[0].QCx = zeros((1, n_belem+1))
+            self.blades[0].QCy = rB*np.ones((1, n_belem+1))
             self.blades[0].QCz = deltac*ones((1, n_belem+1))
-            self.blades[0].CtoR = CR
+            self.blades[0].CtoR = CR*np.ones((1, n_belem+1))
             sTwist = sin(bTwist/180.0*pi)
             cTwist = cos(bTwist/180.0*pi)
-            self.blades[0].tx = sTwist
+            self.blades[0].tx = sTwist*np.ones((1, n_belem+1))
             self.blades[0].ty = zeros((1, n_belem+1))
-            self.blades[0].tz = -cTwist
+            self.blades[0].tz = -cTwist*np.ones((1, n_belem+1))
             # Calc element geom for first blade
             self.blades[0].calc_element_geom()
             # Rotate through incidence and coning angle
@@ -483,8 +501,8 @@ class Turbine(object):
             # Copy and rotate for other blades
             Phase = np.linspace(0, 2*pi, n_blade + 1)
             for i in range(1, n_blade):
-                self.blades[i] = self.blades[0].rotate(Phase[i], self.RotN, 
-                                                       self.RotP)
+                self.blades[i] = self.blades[0]
+                self.blades[i].rotate(Phase[i], self.rot_n, self.rot_p)
             # Rotate turbine through tilt angle
             self.rotate(Tilt/180.0*pi, [0,0,-1], [0,0,0])
     
@@ -507,10 +525,18 @@ class Turbine(object):
         with open(name, "w") as f:
             f.write("NBlade:   " + str(self.n_blade) + "\n")
             f.write("NStrut:   " + str(self.n_strut) + "\n")
-            f.write("RotN:   {:e}   {:e}   {:e}\n".format(self.rot_n[0],
-                    self.rot_n[1], self.rot_n[2]))
-            f.write("RotP:   {:e}   {:e}   {:e}\n".format(self.rot_p[0],
-                    self.rot_p[1], self.rot_p[2]))
+            if np.shape(self.rot_n)[1]:
+                f.write("RotN:   {:e}   {:e}   {:e}\n".format(self.rot_n[0,0],
+                        self.rot_n[0,1], self.rot_n[0,2]))
+            else:
+                f.write("RotN:   {:e}   {:e}   {:e}\n".format(self.rot_n[0],
+                        self.rot_n[1], self.rot_n[2]))
+            if np.shape(self.rot_p)[1]:
+                f.write("RotP:   {:e}   {:e}   {:e}\n".format(self.rot_p[0,0],
+                        self.rot_p[0,1], self.rot_p[0,2]))
+            else:
+                f.write("RotP:   {:e}   {:e}   {:e}\n".format(self.rot_p[0],
+                        self.rot_p[1], self.rot_p[2]))
             f.write("RefAR:   {:e}\n".format(self.ref_ar))
             f.write("RefR:   {:e}\n".format(self.ref_r))
             if self.turb_type:
@@ -670,24 +696,22 @@ class Turbine(object):
     
     
 if __name__ == "__main__":
-#    quatrot([[1, 0, 0], [0, 1, 0]], pi, [0, 0, 1], [0, 0, 0])
-#    quatrot([1, 0, 0], pi, [0, 0, 1], [0, 0, 0])
     n_blade = 2
     n_belem = 5
-    n_strut = 2
+    n_strut = 0
     n_selem = 5
     ref_r = 1.0
     rot_n = [0, 0, 1]
     rot_p = [0, 0, 0]
     ref_ar = 1.0
-    turb_opts = {"type" : "VAWT",
-                 "REqR" : 0.5,
+    turb_opts = {"REqR" : 0.5,
                  "CR" : 0.1,
                  "HR" : 1.0,
                  "eta" : 0.5,
                  "BShape" : None,
                  "CRs" : 0.1,
                  "TCs" : 0.12}
+    turb_opts = hawt_defaults
     turbine = Turbine(n_blade, n_belem, n_strut, n_selem, ref_r, rot_n,
-                      rot_p, ref_ar, **turb_opts)
+                      rot_p, ref_ar, turb_type="HAWT", **turb_opts)
     turbine.writefile("test")
