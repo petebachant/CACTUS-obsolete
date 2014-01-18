@@ -50,17 +50,18 @@ class Blade(object):
     chord line and section normal and tangential vectors defined at zero
     turbine rotation phase.
     
-    QC: Quarter chord location (over ref. radius) for each element end (size n_elem + 1).\n
-    n: Blade section normal vector for each element end (size n_elem + 1). Defines
-    positive angle of attack (AOA positive when relative velocity component
-    is positive in the normal direction.\n
-    t: Blade section tangent vector (must use rearward chord line) for each element end
-    (size n_elem + 1).\n
-    CtoR: Chord to ref. radius for each element end (size n_elem + 1).\n
-    AreaR: Element area over ref. radius squared for each element (size n_elem).\n
+    QC: Quarter chord location (over ref. radius) for each element end 
+        (size n_elem + 1).
+    n:  Blade section normal vector for each element end (size n_elem + 1). 
+        Defines positive angle of attack (AOA positive when relative velocity 
+        component is positive in the normal direction.
+    t:  Blade section tangent vector (must use rearward chord line) for each 
+        element end (size n_elem + 1).
+    CtoR: Chord to ref. radius for each element end (size n_elem + 1).
+    AreaR: Element area over ref. radius squared for each element (size n_elem).
     iSect: Airfoil section index for each element (size n_elem). Used in
-    CACTUS to identify the airfoil data tables (defined in the CACTUS input
-    file) to use with that element.\n
+        CACTUS to identify the airfoil data tables (defined in the CACTUS input
+        file) to use with that element.
     
     """
     def __init__(self, n_elem):
@@ -104,6 +105,10 @@ class Blade(object):
     def update_area(self):
         pass
         # Put the code from UpdateBElemArea.m here
+        
+    def calc_element_geom(self):
+        """Calculates blade element geometry."""
+        pass
 
 
 class Strut(object):
@@ -111,19 +116,22 @@ class Strut(object):
     Create empty strut with specified number of elements, n_elem. Strut element
     locations defined at zero turbine rotation phase.
     
-    SE: Location (over ref. radius) for each element end (size n_elem + 1).\n
-    CtoR: Chord to ref. radius for each element end (size n_elem + 1).\n
-    AreaR: Element area over ref. radius squared for each element (size n_elem).\n
-    TtoC: Strut thickness to chord ratio.\n
-    BIndS: Index of the blade to which the first strut element is attached.\n
-    EIndS: Index of the element on blade BIndS where the first strut element is attached.\n
-    BIndE: Index of the blade to which the last strut element is attached.\n
-    EIndE: Index of the element on blade BInd where the last strut element is attached.\n
-       Blade and element indicies used in CACTUS to identify the relevant
-       blade data to use in calculating strut-blade interference drag. \n
-       For struts that are attached to the rotor shaft at one end (not to
-       another blade), set the appropriate BInd and EInd values to zero. \n
-   """
+    SE:    Location (over ref. radius) for each element end (size n_elem + 1).
+    CtoR:  Chord to ref. radius for each element end (size n_elem + 1).
+    AreaR: Element area over ref. radius squared for each element (size n_elem).
+    TtoC:  Strut thickness to chord ratio.
+    BIndS: Index of the blade to which the first strut element is attached.
+    EIndS: Index of the element on blade BIndS where the first strut element 
+           is attached.
+    BIndE: Index of the blade to which the last strut element is attached.
+    EIndE: Index of the element on blade BInd where the last strut element 
+           is attached.
+
+    Blade and element indices used in CACTUS to identify the relevant
+    blade data to use in calculating strut-blade interference drag.
+    For struts that are attached to the rotor shaft at one end (not to
+    another blade), set the appropriate BInd and EInd values to zero.
+    """
     def __init__(self, n_elem):
         self.n_elem = n_elem
         self.SEx = zeros(1,n_elem+1)
@@ -137,14 +145,14 @@ class Strut(object):
         self.BIndE = 1
         self.EIndE = 1
         
-    def rotate(self, theta, nR, Origin):
+    def rotate(self, theta, nR, origin):
         """
         Rotates strut structure around normal vector nR (size 1 x 3) through
         angle Theta (rad), using specified origin point (size 1 x 3).
         """
         # Rotate element locations
-        P = [self.SEx, self.SEy, self.SEz]
-        PR = quatrot(P.conj().transpose(), Theta, nR, Origin)
+        P = np.hstack((self.SEx, self.SEy, self.SEz))
+        PR = quatrot(P.conj().transpose(), theta, nR, origin)
         self.SEx = PR[:, 0].conj().transpose()
         self.SEy = PR[:, 1].conj().transpose()
         self.SEz = PR[:, 2].conj().transpose()
@@ -152,38 +160,43 @@ class Strut(object):
         
     def update_area(self):
         pass
+    
+    def calc_element_geom(self):
+        """Calculates strut element geometry."""
+        pass
 
 
 class Turbine(object):
     """
     Creates a CACTUS turbine geometry structure.
     
-    n_blade: Number of blades. \n
-    n_belem: Number of elements per blade. \n
+    n_blade: Number of blades.
+    n_belem: Number of elements per blade.
     n_strut: Number of struts.
     n_selem: Number of elements per strut.
-    ref_r: Reference radius (ft) defining the scale of the turbine geometry.
-    Will be used to normalize other distances input directly to CACTUS, and
-    also used when outputing dimensional results from CACTUS.
-    rot_n: Normal vector (size 1 x 3) of turbine rotation axis. Input value
-    used as default when turb_type is empty, but will be overwritten if a turb_type 
-    is selected...
-    rot_p: Origin point (size 1 x 3) on turbine rotation axis. Input value
-    used as default when turb_type is empty, but will be overwritten if a turb_type 
-    is selected...
-    ref_ar: Reference frontal area scaled by ref_r^2. Used for
-    force/torque/power coefficient normalization in CACTUS. Input value
-    used as default when turb_type is empty, but will be overwritten if a turb_type 
-    is selected...
-    turb_type: Recognized generic turbine type string (see code below). Input empty to 
-    just create an empty turbine structure. If input string is
-    recognized, will fill arrays with actual data for given turbine type
-    using additional arguments defined below.
+    ref_r:   Reference radius (ft) defining the scale of the turbine geometry.
+             Will be used to normalize other distances input directly to 
+             CACTUS, and also used when outputing dimensional results from 
+             CACTUS.
+    rot_n:   Normal vector (size 1 x 3) of turbine rotation axis. Input value
+             used as default when turb_type is empty, but will be overwritten 
+             if a turb_type is selected...
+    rot_p:   Origin point (size 1 x 3) on turbine rotation axis. Input value
+             used as default when turb_type is empty, but will be overwritten 
+             if a turb_type is selected...
+    ref_ar:  Reference frontal area scaled by ref_r^2. Used for
+             force/torque/power coefficient normalization in CACTUS. Input 
+             value used as default when turb_type is empty, but will be 
+             overwritten if a turb_type is selected...
+    turb_type: Recognized generic turbine type string (see code below). 
+             Input empty to just create an empty turbine structure. If input 
+             string is recognized, will fill arrays with actual data for given 
+             turbine type using additional arguments defined below.
     varargin: Additional args (comma separated) used for recognized turbine
-    types (see comments in code below for definition).
+             types (see comments in code below for definition).
     """
     def __init__(self, n_blade, n_belem, n_strut, n_selem, ref_r, rot_n,
-                 rot_p, ref_ar, turb_type=None, varargin=None):
+                 rot_p, ref_ar, turb_type=None, **kwargs):
         
         self.n_blade = n_blade
         self.n_strut=n_strut
@@ -203,220 +216,192 @@ class Turbine(object):
         for i in xrange(n_strut):
             self.struts.append(Strut(n_selem)) 
 
-
         # Fill geometry if turbine type recognized
         if turb_type == 'VAWT':
             """
-            Cross-flow turbine generator for a vertical axis wind turbine (VAWT) with either straight or parabolic blades.
-            For n_strut > 0, struts will be evenly distributed amongst blades (n_strut must be a multiple of n_blade) and 
+            Cross-flow turbine generator for a vertical axis wind turbine 
+            (VAWT) with either straight or parabolic blades.
+            For n_strut > 0, struts will be evenly distributed amongst blades 
+            (n_strut must be a multiple of n_blade) and 
             along rotation axis from the center to the tips.
             Additional arguments:
                 REqR: Equitorial radius to reference radius ratio
-                CR: Blade chord to equitorial radius ratio
-                HR: Turbine height to equitorial radius ratio
-                eta: Blade mount point ratio ((distance behind leading edge of the blade mount point) / (chord))
+                CR:   Blade chord to equitorial radius ratio
+                HR:   Turbine height to equitorial radius ratio
+                eta:  Blade mount point ratio ((distance behind leading edge of 
+                      the blade mount point) / (chord))
                 BShape: 0 for straight blades, 1 for parabolic blades
-                CRs: Strut chord to equitorial radius ratio (only used if n_strut > 0)
-                TCs: Strut thickness to chord ratio (only used if n_strut > 0)
+                CRs:  Strut chord to equitorial radius ratio (only used if 
+                      n_strut > 0)
+                TCs:  Strut thickness to chord ratio (only used if n_strut > 0)
             """
-        # Get vars
+            # Get parameters from kwargs
+            if len(kwargs) < 7:
+                raise RuntimeError('Not enough inputs for selected turbine type')
+            REqR = kwargs["REqR"]
+            CR = kwargs["CR"]
+            HR = kwargs["HR"]
+            eta = kwargs["eta"]
+            BShape = kwargs["BShape"]
+            CRs = kwargs["CRs"]
+            TCs = kwargs["TCs"]
+            # Ref to reference radius
+            CR = CR*REqR
+            HR = HR*REqR
+            # Set rotation axis along y
+            self.RotN = [0,1,0]
+            self.RotP = [0,0,0]
+            # Radius ratio function
+            yB = np.linspace(0, HR, n_belem+1)
+            if BShape:
+                # parabolic blades
+                rr = REqR*(1.0 - 4.0*(yB/HR - 0.5)**2)
+                # Frontal area normalized by ref_r^2
+                self.ref_ar = 2*(REqR*HR - 1.0/3.0*HR)
+                # Fill element end geometry
+                deltac = (eta - 0.25)*CR
+                self.blade[0].CtoR = CR*ones(1, n_belem+1)
+                self.blade[0].tx = ones(1, n_belem+1)
+                self.blade[0].ty = zeros(1, n_belem+1)
+                self.blade[0].tz = zeros(1, n_belem+1)
+                self.blade[0].QCx = -deltac*ones(1, n_belem+1)
+                self.blade[0].QCy = yB
+                self.blade[0].QCz = -rr
+            else:
+                # straight blades
+                rr = REqR*ones(np.shape(yB))
+                # Frontal area normalized by RefR^2
+                self.RefAR=2*REqR*HR
+                # Fill element end geometry
+                deltac = (eta - 0.25)*CR
+                self.blade[0].CtoR = CR*ones(1, n_belem+1)
+                self.blade[0].tx = ones(1, n_belem+1)
+                self.blade[0].ty = zeros(1, n_belem+1)
+                self.blade[0].tz = zeros(1,n_belem+1)
+                self.blade[0].QCx = -deltac*ones(1, n_belem+1)
+                self.blade[0].QCy = yB
+                self.blade[0].QCz = -rr
+        
+            # Calc element geom for first blade
+            self.blade[0].calc_element.geom()
             
-#        if len(varargin) < 7:
-#            error('Not enough inputs for selected turbine type')
-#        end 
-#        REqR=varargin{1};
-#        CR=varargin{2};
-#        HR=varargin{3};
-#        eta=varargin{4};
-#        BShape=varargin{5};
-#        CRs=varargin{6};
-#        TCs=varargin{7};
-#        
-#        % Ref to reference radius
-#        CR=CR*REqR;
-#        HR=HR*REqR;
-#        
-#        % Set rotation axis along y
-#        T.RotN=[0,1,0];
-#        T.RotP=[0,0,0];
-#        
-#        % Radius ratio function
-#        yB=linspace(0,HR,n_belem+1);
-#        if BShape
-#            % parabolic blades
-#            rr=REqR*(1-4*(yB/HR-.5).^2);
-#            % Frontal area normalized by ref_r^2
-#            T.ref_ar=2*(REqR*HR-1/3*HR);
-#            
-#            % Fill first blade
-#            deltac=(eta-.25)*CR;
-#            T.B(1).CtoR=CR*ones(1,n_belem+1);
-#            T.B(1).tx=ones(1,n_belem+1);
-#            T.B(1).ty=zeros(1,n_belem+1);
-#            T.B(1).tz=zeros(1,n_belem+1);
-#            % normal vector (machine inward)
-#            drdy=-8/HR*(yB/HR-1/2);
-#            n=[zeros(1,n_belem+1);drdy;ones(1,n_belem+1)];
-#            nmag=sqrt(sum(n.^2));
-#            n=n./nmag(ones(1,3),:);
-#            Ind=find(n(3,:)<0);
-#            n(:,Ind)=-n(:,Ind);
-#            T.B(1).nx=n(1,:);
-#            T.B(1).ny=n(2,:);
-#            T.B(1).nz=n(3,:);
-#            T.B(1).QCx=-deltac*ones(1,n_belem+1);
-#            T.B(1).QCy=yB;
-#            T.B(1).QCz=-rr;
-#        else
-#            % straight blades
-#            rr=REqR*ones(size(yB));
-#            % Frontal area normalized by ref_r^2
-#            T.ref_ar=2*REqR*HR;
-#            
-#            % Fill first blade
-#            deltac=(eta-.25)*CR;
-#            T.B(1).CtoR=CR*ones(1,n_belem+1);
-#            T.B(1).tx=ones(1,n_belem+1);
-#            T.B(1).ty=zeros(1,n_belem+1);
-#            T.B(1).tz=zeros(1,n_belem+1);
-#            % normal vector (machine inward)
-#            T.B(1).nx=zeros(1,n_belem+1);
-#            T.B(1).ny=zeros(1,n_belem+1);
-#            T.B(1).nz=ones(1,n_belem+1);
-#            T.B(1).QCx=-deltac*ones(1,n_belem+1);
-#            T.B(1).QCy=yB;
-#            T.B(1).QCz=-rr;
-#        end
-#    
-#        % Calc element area
-#        T.B(1)=UpdateBElemArea(T.B(1));
-#        
-#        % Copy and rotate for other blades
-#        Phase=linspace(0,2*pi,n_blade+1);
-#        for i=2:n_blade
-#            T.B(i)=RotateBlade(T.B(1),Phase(i),T.RotN,T.RotP);
-#        end
-#        
-#        % Fill struts on first blade
-#        if mod(n_strut,n_blade)~=0
-#            error('Number of struts must be a multiple of the number of blades for the ''VAWT'' input type.');
-#        end
-#        NSpB=round(n_strut/n_blade);
-#        yS=linspace(0,HR,NSpB+2);
-#        yS=yS(2:end-1);
-#        rrS=interp1(yB,rr,yS);
-#        yC=(yB(2:end)+yB(1:end-1))/2;
-#        
-#        for i=1:NSpB
-#            T.S(i).SEx=zeros(1,n_selem+1);
-#            T.S(i).SEy=yS(i)*ones(1,n_selem+1);
-#            T.S(i).SEz=-linspace(0,rrS(i),n_selem+1);
-#            T.S(i).CtoR=CRs*ones(1,n_selem+1);
-#            T.S(i).TtoC=TCs;
-#            T.S(i).BIndS=0;
-#            T.S(i).EIndS=0;
-#            T.S(i).BIndE=1;
-#            [m,T.S(i).EIndE]=min(abs(yC-yS(i)));
-#            
-#            % Calc element area
-#            T.S(i)=UpdateSElemArea(T.S(i));
-#        end
-#        
-#        % Copy and rotate for other blades
-#        for i=2:n_blade
-#            for j=1:NSpB
-#                SInd=(i-1)*NSpB+j;
-#                T.S(SInd)=RotateStrut(T.S(j),Phase(i),T.RotN,T.RotP);
-#                T.S(SInd).BInd=i;
-#            end
-#        end
-#    
-#        
-#    elseif strcmp(turb_type,'HAWT')==1
-#        
-#        % Axial-flow turbine generator for a horizontal axis wind turbine (HAWT).
-#    	% Additional arguments:
-#        % RMaxR: Turbine radius to reference radius ratio
-#        % HubRR: Hub radius to turbine radius ratio
-#        % CR: Blade chord to turbine radius ratio (n_belem+1 elements ordered root to tip)
-#        % bTwist: Blade planform twist at each element end (deg, w.r.t. rotor disk plane, positive LE into the wind (-x), n_belem+1 elements ordered root to tip)
-#        % bi: Blade planform incidence (deg, w.r.t. rotor disk plane, positive LE into the wind (-x))
-#        % eta: Blade mount point ratio ((distance behind leading edge of the blade mount point) / (chord))
-#        % bCone: Blade coning angle (deg, positive tip into the wind (-x))
-#        % Tilt: Rotor tilt angle (deg, positive windward axis tilted up)
-#    
-#        % Get vars
-#        if length(varargin)<8
-#            error('Not enough inputs for selected turbine type');
-#        end 
-#        RMaxR=varargin{1};
-#        HubRR=varargin{2};
-#        CR=varargin{3};
-#        bTwist=varargin{4};
-#        bi=varargin{5};
-#        eta=varargin{6};
-#        bCone=varargin{7};
-#        Tilt=varargin{8};
-#        
-#        % Ref to reference radius
-#        CR=CR*RMaxR;
-#        HubRR=HubRR*RMaxR;
-#        
-#        % Set rotation axis along x
-#        T.RotN=[1,0,0];
-#        T.RotP=[0,0,0];
-#        
-#        % Radius ratio function
-#        rB=linspace(HubRR,RMaxR,n_belem+1);
-#        % Frontal area normalized by ref_r^2
-#        T.ref_ar=pi*RMaxR^2;
-#    
-#        % Fill first blade
-#        deltac=(eta-.25)*CR(1);
-#        T.B(1).QCx=zeros(1,n_belem+1);
-#        T.B(1).QCy=rB;
-#        T.B(1).QCz=deltac*ones(1,n_belem+1);
-#        T.B(1).CtoR=CR;
-#        sTwist=sin(bTwist/180*pi);
-#        cTwist=cos(bTwist/180*pi);
-#        T.B(1).tx=sTwist;
-#        T.B(1).ty=zeros(1,n_belem+1);
-#        T.B(1).tz=-cTwist;
-#        % normal vector (machine rearward (x))
-#        T.B(1).nx=cTwist;
-#        T.B(1).ny=zeros(1,n_belem+1);
-#        T.B(1).nz=sTwist;
-#    
-#        % Calc element area
-#        T.B(1)=UpdateBElemArea(T.B(1));
-#        
-#        % Rotate through incidence and coning angle
-#        T.B(1)=RotateBlade(T.B(1),bi/180*pi,[0,-1,0],[0,0,0]);
-#        T.B(1)=RotateBlade(T.B(1),bCone/180*pi,[0,0,1],[0,0,0]);
-#        
-#        % Copy and rotate for other blades
-#        Phase=linspace(0,2*pi,n_blade+1);
-#        for i=2:n_blade
-#            T.B(i)=RotateBlade(T.B(1),Phase(i),T.RotN,T.RotP);
-#        end
-#        
-#        % Rotate turbine through tilt angle
-#        T=RotateTurbine(T,Tilt/180*pi,[0,0,-1],[0,0,0]);
-#        
-#    end
+            # Copy and rotate for other blades
+            Phase = np.linspace(0, 2*pi, n_blade+1)
+            for i in range(1, n_blade):
+                self.blades[i] = self.blades[0].rotate(Phase(i), T.RotN, T.RotP)
+            
+            # Fill struts on first blade
+            if float(n_strut) % n_blade != 0:
+                raise RuntimeError('Number of struts must be a multiple of the\
+                                    number of blades for the ''VAWT'' input type.')
+            NSpB = np.round(n_strut/n_blade)
+            yS = np.linspace(0, HR, NSpB+2)
+            yS = yS[1:-1]
+            rrS = np.interp(yS, yB, rr)
+            yC = (yB[1:] + yB[:-1])/2
+            
+            for i in range(NSpB):
+                # Fill element end geometry
+                self.struts[i].MCx = zeros(1, n_selem+1)
+                self.struts[i].MCy = yS[i]*ones(1, n_selem+1)
+                self.struts[i].MCz = -np.linspace(0, rrS[i], n_selem+1)
+                self.struts[i].CtoR=CRs*ones(1, n_selem+1)
+                self.struts[i].TtoC = TCs
+                self.struts[i].BIndS = 0
+                self.struts[i].EIndS = 0
+                self.struts[i].BIndE=1
+                self.struts[i].EIndE = np.min(np.abs(yC - yS[i]))
+                
+                # Calc element geom
+                self.struts[i].calc_element_geom()
+            
+            # Copy and rotate for other blades
+            for i in range(1, n_blade):
+                for j in range(NSpB):
+                    SInd = (i - 1)*NSpB + j
+                    self.struts[SInd] = self.struts[j].rotate(Phase(i), 
+                                                              self.RotN, 
+                                                              self.RotP)
+                    self.struts[SInd].BInd = i
+
+        elif turb_type=='HAWT':
+            """
+            Axial-flow turbine generator for a horizontal axis wind turbine (HAWT).
+            Additional arguments:
+                RMaxR:  Turbine radius to reference radius ratio
+                HubRR:  Hub radius to turbine radius ratio
+                CR:     Blade chord to turbine radius ratio (n_belem+1 elements 
+                        ordered root to tip)
+                bTwist: Blade planform twist at each element end (deg, w.r.t. 
+                        blade planform plane (rotor disk plane when bi=0), 
+                        positive LE into the wind (-x), n_belem+1 elements 
+                        ordered root to tip)
+                bi:     Blade planform incidence (deg, w.r.t. rotor disk plane, 
+                        positive LE into the wind (-x))
+                eta:    Blade mount point ratio ((distance behind leading edge 
+                        of the blade mount point) / (chord))
+                bCone:  Blade coning angle (deg, positive tip into the wind (-x))
+                Tilt:   Rotor tilt angle (deg, positive windward axis tilted up)
+            """
+            
+            # Get vars
+            if len(kwargs) < 8:
+                raise RuntimeError('Not enough inputs for selected turbine type')
+            RMaxR = kwargs["RMaxR"]
+            HubRR = kwargs["HubRR"]
+            CR = kwargs["CR"]
+            bTwist = kwargs["bTwist"]
+            bi = kwargs["bi"]
+            eta = kwargs["eta"]
+            bCone = kwargs["bCone"]
+            Tilt = kwargs["Tilt"]
+            
+            # Ref to reference radius
+            CR = CR*RMaxR
+            HubRR = HubRR*RMaxR
+            
+            # Set rotation axis along x
+            self.RotN = [1,0,0]
+            self.RotP = [0,0,0]
+            
+            # Radius ratio function
+            rB = np.linspace(HubRR, RMaxR, n_belem+1)
+            # Frontal area normalized by RefR^2
+            self.RefAR = pi*RMaxR**2
+        
+            # Fill element end data for first blade
+            deltac = (eta - 0.25)*CR[0]
+            self.blades[0].QCx = zeros(1,n_belem+1)
+            self.blades[0].QCy = rB
+            self.blades[0].QCz = deltac*ones(1,n_belem+1)
+            self.blades[0].CtoR = CR
+            sTwist = sin(bTwist/180.0*pi)
+            cTwist = cos(bTwist/180.0*pi)
+            self.blades[0].tx = sTwist
+            self.blades[0].ty = zeros(1, n_belem+1)
+            self.blades[0].tz = -cTwist
+            # Calc element geom for first blade
+            self.blades[0].calc_element_geom()
+            # Rotate through incidence and coning angle
+            self.blades[0].rotate(bi/180.0*pi, [0,-1,0], [0,0,0])
+            self.blades[0].rotate(bCone/180.0*pi, [0,0,1], [0,0,0])
+            # Copy and rotate for other blades
+            Phase = np.linspace(0, 2*pi, n_blade + 1)
+            for i in range(1, n_blade):
+                self.blades[i] = self.blades[0].rotate(Phase(i), self.RotN, 
+                                                       self.RotP)
+            # Rotate turbine through tilt angle
+            self.rotate(Tilt/180.0*pi, [0,0,-1], [0,0,0])
     
     def rotate(self, theta, nvec, origin):
         """Rotate the turbine."""
-        
         # Rotate turbine rotation axis vector
         self.rotn = quatrot(self.rotn, theta, nvec, (0,0,0))
-        
         # Rotate turbine rotation origin point
         self.rotp = quatrot(self.rotp, theta, nvec, origin)
-        
+        # Rotate blades and struts
         for blade in self.blades:
             blade.rotate(theta, nvec, origin)
-            
         for strut in self.struts:
             strut.rotate(theta, nvec, origin)
             
