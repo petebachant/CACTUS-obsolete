@@ -355,30 +355,30 @@ class Turbine(object):
                 self.ref_ar = 2*(REqR*HR - 1.0/3.0*HR)
                 # Fill element end geometry
                 deltac = (eta - 0.25)*CR
-                self.blade[0].CtoR = CR*ones(1, n_belem+1)
-                self.blade[0].tx = ones(1, n_belem+1)
-                self.blade[0].ty = zeros(1, n_belem+1)
-                self.blade[0].tz = zeros(1, n_belem+1)
-                self.blade[0].QCx = -deltac*ones(1, n_belem+1)
-                self.blade[0].QCy = yB
-                self.blade[0].QCz = -rr
+                self.blades[0].CtoR = CR*ones((1, n_belem+1))
+                self.blades[0].tx = ones((1, n_belem+1))
+                self.blades[0].ty = zeros((1, n_belem+1))
+                self.blades[0].tz = zeros((1, n_belem+1))
+                self.blades[0].QCx = -deltac*ones((1, n_belem+1))
+                self.blades[0].QCy = yB*np.ones((1, n_belem+1))
+                self.blades[0].QCz = -rr*np.ones((1, n_belem+1))
             else:
                 # straight blades
                 rr = REqR*ones(np.shape(yB))
                 # Frontal area normalized by RefR^2
-                self.RefAR=2*REqR*HR
+                self.RefAR = 2*REqR*HR
                 # Fill element end geometry
                 deltac = (eta - 0.25)*CR
-                self.blade[0].CtoR = CR*ones(1, n_belem+1)
-                self.blade[0].tx = ones(1, n_belem+1)
-                self.blade[0].ty = zeros(1, n_belem+1)
-                self.blade[0].tz = zeros(1,n_belem+1)
-                self.blade[0].QCx = -deltac*ones(1, n_belem+1)
-                self.blade[0].QCy = yB
-                self.blade[0].QCz = -rr
+                self.blades[0].CtoR = CR*ones((1, n_belem+1))
+                self.blades[0].tx = ones((1, n_belem+1))
+                self.blades[0].ty = zeros((1, n_belem+1))
+                self.blades[0].tz = zeros((1, n_belem+1))
+                self.blades[0].QCx = -deltac*ones((1, n_belem+1))
+                self.blades[0].QCy = yB*np.ones((1, n_belem+1))
+                self.blades[0].QCz = -rr*np.ones((1, n_belem+1))
         
             # Calc element geom for first blade
-            self.blade[0].calc_element.geom()
+            self.blades[0].calc_element_geom()
             
             # Copy and rotate for other blades
             Phase = np.linspace(0, 2*pi, n_blade+1)
@@ -397,14 +397,14 @@ class Turbine(object):
             
             for i in range(NSpB):
                 # Fill element end geometry
-                self.struts[i].MCx = zeros(1, n_selem+1)
-                self.struts[i].MCy = yS[i]*ones(1, n_selem+1)
-                self.struts[i].MCz = -np.linspace(0, rrS[i], n_selem+1)
-                self.struts[i].CtoR=CRs*ones(1, n_selem+1)
+                self.struts[i].MCx = zeros((1, n_selem+1))
+                self.struts[i].MCy = yS[i]*ones((1, n_selem+1))
+                self.struts[i].MCz = -np.linspace(0, rrS[i], n_selem+1)*np.ones((1, n_belem+1))
+                self.struts[i].CtoR=CRs*ones((1, n_selem+1))
                 self.struts[i].TtoC = TCs
                 self.struts[i].BIndS = 0
                 self.struts[i].EIndS = 0
-                self.struts[i].BIndE=1
+                self.struts[i].BIndE = 1
                 self.struts[i].EIndE = np.min(np.abs(yC - yS[i]))
                 
                 # Calc element geom
@@ -412,12 +412,12 @@ class Turbine(object):
             
             # Copy and rotate for other blades
             for i in range(1, n_blade):
-                for j in range(NSpB):
+                for j in range(1, NSpB):
                     SInd = (i - 1)*NSpB + j
                     self.struts[SInd] = self.struts[j].rotate(Phase[i], 
                                                               self.RotN, 
                                                               self.RotP)
-                    self.struts[SInd].BInd = i
+                    self.struts[SInd].BIndE = i
 
         elif turb_type=='HAWT':
             """
@@ -468,12 +468,12 @@ class Turbine(object):
             deltac = (eta - 0.25)*CR[0]
             self.blades[0].QCx = zeros(1,n_belem+1)
             self.blades[0].QCy = rB
-            self.blades[0].QCz = deltac*ones(1,n_belem+1)
+            self.blades[0].QCz = deltac*ones((1, n_belem+1))
             self.blades[0].CtoR = CR
             sTwist = sin(bTwist/180.0*pi)
             cTwist = cos(bTwist/180.0*pi)
             self.blades[0].tx = sTwist
-            self.blades[0].ty = zeros(1, n_belem+1)
+            self.blades[0].ty = zeros((1, n_belem+1))
             self.blades[0].tz = -cTwist
             # Calc element geom for first blade
             self.blades[0].calc_element_geom()
@@ -520,6 +520,13 @@ if __name__ == "__main__":
     rot_n = [0, 0, 1]
     rot_p = [0, 0, 0]
     ref_ar = 1.0
+    turb_opts = {"REqR" : 0.5,
+                 "CR" : 0.1,
+                 "HR" : 1.0,
+                 "eta" : 0.5,
+                 "BShape" : None,
+                 "CRs" : 0.1,
+                 "TCs" : 0.12}
     turbine = Turbine(n_blade, n_belem, n_strut, n_selem, ref_r, rot_n,
-                      rot_p, ref_ar)
+                      rot_p, ref_ar, turb_type="VAWT", **turb_opts)
 #    turbine.rotate(pi/4, rot_n, rot_p)
