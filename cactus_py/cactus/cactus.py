@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jan 16 13:42:15 2014
-@author: Pete Bachant
-
 This module contains functions for running CACTUS and manipulating output data
+
 """
 import numpy as np
 import matplotlib.pyplot as plt
