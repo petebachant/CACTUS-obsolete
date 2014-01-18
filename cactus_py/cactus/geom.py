@@ -502,8 +502,6 @@ class Turbine(object):
             self.rot_n = np.array([1.0, 0.0, 0.0])
             self.rot_p = np.array([0.0, 0.0, 0.0])
             
-            print np.shape(self.rot_n)
-            
             # Radius ratio function
             rB = np.linspace(HubRR, RMaxR, n_belem+1)
             # Frontal area normalized by RefR^2
@@ -552,16 +550,18 @@ class Turbine(object):
         with open(name, "w") as f:
             f.write("NBlade:   " + str(self.n_blade) + "\n")
             f.write("NStrut:   " + str(self.n_strut) + "\n")
-            if np.shape(self.rot_n)[1]:
+            try: 
+                np.shape(self.rot_n)[1]
                 f.write("RotN:   {:e}   {:e}   {:e}\n".format(self.rot_n[0,0],
                         self.rot_n[0,1], self.rot_n[0,2]))
-            else:
+            except IndexError:
                 f.write("RotN:   {:e}   {:e}   {:e}\n".format(self.rot_n[0],
                         self.rot_n[1], self.rot_n[2]))
-            if np.shape(self.rot_p)[1]:
+            try: 
+                np.shape(self.rot_p)[1]
                 f.write("RotP:   {:e}   {:e}   {:e}\n".format(self.rot_p[0,0],
                         self.rot_p[0,1], self.rot_p[0,2]))
-            else:
+            except IndexError:
                 f.write("RotP:   {:e}   {:e}   {:e}\n".format(self.rot_p[0],
                         self.rot_p[1], self.rot_p[2]))
             f.write("RefAR:   {:e}\n".format(self.ref_ar))
