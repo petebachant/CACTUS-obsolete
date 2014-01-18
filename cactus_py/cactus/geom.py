@@ -280,67 +280,94 @@ class Turbine(object):
     """
     Creates a CACTUS turbine geometry structure.
     
-    n_blade: Number of blades.
-    n_belem: Number of elements per blade.
-    n_strut: Number of struts.
-    n_selem: Number of elements per strut.
-    ref_r:   Reference radius (ft) defining the scale of the turbine geometry.
-             Will be used to normalize other distances input directly to 
-             CACTUS, and also used when outputing dimensional results from 
-             CACTUS.
-    rot_n:   Normal vector (size 1 x 3) of turbine rotation axis. Input value
-             used as default when turb_type is empty, but will be overwritten 
-             if a turb_type is selected...
-    rot_p:   Origin point (size 1 x 3) on turbine rotation axis. Input value
-             used as default when turb_type is empty, but will be overwritten 
-             if a turb_type is selected...
-    ref_ar:  Reference frontal area scaled by ref_r^2. Used for
-             force/torque/power coefficient normalization in CACTUS. Input 
-             value used as default when turb_type is empty, but will be 
-             overwritten if a turb_type is selected...
-    turb_type: Recognized generic turbine type string (see code below). 
-             Input empty to just create an empty turbine structure. If input 
-             string is recognized, will fill arrays with actual data for given 
-             turbine type using additional arguments defined below.
-    **kwargs: Additional args used for recognized turbine types (see comments 
-             in code below for definition).
+    n_blade : int 
+        number of blades.
+    n_belem : int
+        Number of elements per blade.
+    n_strut : int
+        Number of struts.
+    n_selem : int
+        Number of elements per strut.
+    ref_r : float    
+        Reference radius (ft) defining the scale of the turbine 
+        geometry. Will be used to normalize other distances input 
+        directly to CACTUS, and also used when outputing dimensional 
+        results from CACTUS.
+    rot_n : array
+        Normal vector (size 1 x 3) of turbine rotation axis. Input value
+        used as default when turb_type is empty, but will be overwritten 
+        if a turb_type is selected.
+    rot_p : array
+        Origin point (size 1 x 3) on turbine rotation axis. Input value
+        used as default when turb_type is empty, but will be overwritten 
+        if a turb_type is selected.
+    ref_ar : float
+        Reference frontal area scaled by ref_r^2. Used for
+        force/torque/power coefficient normalization in CACTUS. Input 
+        value used as default when turb_type is empty, but will be 
+        overwritten if a turb_type is selected...
+    turb_type : string, optional
+        Recognized generic turbine type string (see code below). 
+        Input empty to just create an empty turbine structure. If input 
+        string is recognized, will fill arrays with actual data for given 
+        turbine type using additional arguments defined below.
+    **kwargs : 
+        Additional args used for recognized turbine types (see comments 
+        below for definition).
              
-        turb_type "VAWT"
-        ----------------
-        Cross-flow turbine generator for a vertical axis wind turbine 
-        (VAWT) with either straight or parabolic blades.
-        For n_strut > 0, struts will be evenly distributed amongst blades 
-        (n_strut must be a multiple of n_blade) and 
-        along rotation axis from the center to the tips.
-        Additional arguments:
-            REqR: Equitorial radius to reference radius ratio
-            CR:   Blade chord to equitorial radius ratio
-            HR:   Turbine height to equitorial radius ratio
-            eta:  Blade mount point ratio ((distance behind leading edge of 
-                  the blade mount point) / (chord))
-            BShape: "parabolic" for parabolic blades, None for straight
-            CRs:  Strut chord to equitorial radius ratio (only used if 
-                  n_strut > 0)
-            TCs:  Strut thickness to chord ratio (only used if n_strut > 0)
-             
-        turb_type "HAWT"
-        ----------------
-        Axial-flow turbine generator for a horizontal axis wind turbine (HAWT).
-        Additional arguments:
-            RMaxR:  Turbine radius to reference radius ratio
-            HubRR:  Hub radius to turbine radius ratio
-            CR:     Blade chord to turbine radius ratio (n_belem+1 elements 
-                    ordered root to tip)
-            bTwist: Blade planform twist at each element end (deg, w.r.t. 
-                    blade planform plane (rotor disk plane when bi=0), 
-                    positive LE into the wind (-x), n_belem+1 elements 
-                    ordered root to tip)
-            bi:     Blade planform incidence (deg, w.r.t. rotor disk plane, 
-                    positive LE into the wind (-x))
-            eta:    Blade mount point ratio ((distance behind leading edge 
-                    of the blade mount point) / (chord))
-            bCone:  Blade coning angle (deg, positive tip into the wind (-x))
-            Tilt:   Rotor tilt angle (deg, positive windward axis tilted up)
+    turb_type "VAWT"
+    ----------------
+    Cross-flow turbine generator for a vertical axis wind turbine 
+    (VAWT) with either straight or parabolic blades.
+    For n_strut > 0, struts will be evenly distributed amongst blades 
+    (n_strut must be a multiple of n_blade) and 
+    along rotation axis from the center to the tips.
+    
+    Additional arguments:
+    
+    REqR : 
+        Equitorial radius to reference radius ratio
+    CR :   
+        Blade chord to equitorial radius ratio
+    HR :   
+        Turbine height to equitorial radius ratio
+    eta : 
+        Blade mount point ratio ((distance behind leading edge of the blade 
+        mount point) / (chord))
+    BShape : 
+        Blade shape; "parabolic" for parabolic blades, None for straight
+    CRs :  
+        Strut chord to equitorial radius ratio (only used if n_strut > 0)
+    TCs :  
+        Strut thickness to chord ratio (only used if n_strut > 0)
+         
+    turb_type "HAWT"
+    ----------------
+    Axial-flow turbine generator for a horizontal axis wind turbine (HAWT).
+    
+    Additional arguments:
+    
+    RMaxR :  
+        Turbine radius to reference radius ratio
+    HubRR :  
+        Hub radius to turbine radius ratio
+    CR :     
+        Blade chord to turbine radius ratio (n_belem+1 elements ordered root 
+        to tip)
+    bTwist : 
+        Blade planform twist at each element end (deg, w.r.t. blade planform 
+        plane (rotor disk plane when bi=0), positive LE into the wind (-x), 
+        n_belem + 1 elements ordered root to tip)
+    bi :     
+        Blade planform incidence (deg, w.r.t. rotor disk plane, positive LE 
+        into the wind (-x))
+    eta : 
+        Blade mount point ratio ((distance behind leading edge of the blade 
+        mount point) / (chord))
+    bCone :  
+        Blade coning angle (deg, positive tip into the wind (-x))
+    Tilt :   
+        Rotor tilt angle (deg, positive windward axis tilted up)
     """
     def __init__(self, n_blade, n_belem, n_strut, n_selem, ref_r, rot_n,
                  rot_p, ref_ar, turb_type=None, **kwargs):
@@ -691,7 +718,7 @@ class Turbine(object):
                 f.write("\tEIndE:   {:d}\n".format(self.struts[n].BIndE))
     
     def plot(self, options=None):
-        """Plot turbine geometry. This function does not work yet"""
+        """Plot turbine geometry. This function still needs to be written."""
         pass
     
     
