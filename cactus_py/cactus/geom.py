@@ -288,6 +288,43 @@ class Turbine(object):
              turbine type using additional arguments defined below.
     **kwargs: Additional args used for recognized turbine types (see comments 
              in code below for definition).
+             
+        turb_type "VAWT"
+        ----------------
+        Cross-flow turbine generator for a vertical axis wind turbine 
+        (VAWT) with either straight or parabolic blades.
+        For n_strut > 0, struts will be evenly distributed amongst blades 
+        (n_strut must be a multiple of n_blade) and 
+        along rotation axis from the center to the tips.
+        Additional arguments:
+            REqR: Equitorial radius to reference radius ratio
+            CR:   Blade chord to equitorial radius ratio
+            HR:   Turbine height to equitorial radius ratio
+            eta:  Blade mount point ratio ((distance behind leading edge of 
+                  the blade mount point) / (chord))
+            BShape: 0 for straight blades, 1 for parabolic blades
+            CRs:  Strut chord to equitorial radius ratio (only used if 
+                  n_strut > 0)
+            TCs:  Strut thickness to chord ratio (only used if n_strut > 0)
+             
+        turb_type "HAWT"
+        ----------------
+        Axial-flow turbine generator for a horizontal axis wind turbine (HAWT).
+        Additional arguments:
+            RMaxR:  Turbine radius to reference radius ratio
+            HubRR:  Hub radius to turbine radius ratio
+            CR:     Blade chord to turbine radius ratio (n_belem+1 elements 
+                    ordered root to tip)
+            bTwist: Blade planform twist at each element end (deg, w.r.t. 
+                    blade planform plane (rotor disk plane when bi=0), 
+                    positive LE into the wind (-x), n_belem+1 elements 
+                    ordered root to tip)
+            bi:     Blade planform incidence (deg, w.r.t. rotor disk plane, 
+                    positive LE into the wind (-x))
+            eta:    Blade mount point ratio ((distance behind leading edge 
+                    of the blade mount point) / (chord))
+            bCone:  Blade coning angle (deg, positive tip into the wind (-x))
+            Tilt:   Rotor tilt angle (deg, positive windward axis tilted up)
     """
     def __init__(self, n_blade, n_belem, n_strut, n_selem, ref_r, rot_n,
                  rot_p, ref_ar, turb_type=None, **kwargs):
@@ -312,24 +349,7 @@ class Turbine(object):
             self.struts.append(Strut(n_selem)) 
 
         # Fill geometry if turbine type recognized
-        if turb_type == 'VAWT':
-            """
-            Cross-flow turbine generator for a vertical axis wind turbine 
-            (VAWT) with either straight or parabolic blades.
-            For n_strut > 0, struts will be evenly distributed amongst blades 
-            (n_strut must be a multiple of n_blade) and 
-            along rotation axis from the center to the tips.
-            Additional arguments:
-                REqR: Equitorial radius to reference radius ratio
-                CR:   Blade chord to equitorial radius ratio
-                HR:   Turbine height to equitorial radius ratio
-                eta:  Blade mount point ratio ((distance behind leading edge of 
-                      the blade mount point) / (chord))
-                BShape: 0 for straight blades, 1 for parabolic blades
-                CRs:  Strut chord to equitorial radius ratio (only used if 
-                      n_strut > 0)
-                TCs:  Strut thickness to chord ratio (only used if n_strut > 0)
-            """
+        if self.turb_type == 'VAWT':
             # Get parameters from kwargs
             if len(kwargs) < 7:
                 raise RuntimeError('Not enough inputs for selected turbine type')
@@ -418,26 +438,7 @@ class Turbine(object):
                     self.struts[SInd].rotate(Phase[i], self.RotN, self.RotP)
                     self.struts[SInd].BIndE = i
 
-        elif turb_type=='HAWT':
-            """
-            Axial-flow turbine generator for a horizontal axis wind turbine (HAWT).
-            Additional arguments:
-                RMaxR:  Turbine radius to reference radius ratio
-                HubRR:  Hub radius to turbine radius ratio
-                CR:     Blade chord to turbine radius ratio (n_belem+1 elements 
-                        ordered root to tip)
-                bTwist: Blade planform twist at each element end (deg, w.r.t. 
-                        blade planform plane (rotor disk plane when bi=0), 
-                        positive LE into the wind (-x), n_belem+1 elements 
-                        ordered root to tip)
-                bi:     Blade planform incidence (deg, w.r.t. rotor disk plane, 
-                        positive LE into the wind (-x))
-                eta:    Blade mount point ratio ((distance behind leading edge 
-                        of the blade mount point) / (chord))
-                bCone:  Blade coning angle (deg, positive tip into the wind (-x))
-                Tilt:   Rotor tilt angle (deg, positive windward axis tilted up)
-            """
-            
+        elif self.turb_type=='HAWT':
             # Get vars
             if len(kwargs) < 8:
                 raise RuntimeError('Not enough inputs for selected turbine type')
@@ -664,7 +665,7 @@ class Turbine(object):
                 f.write("\tEIndE:   {:d}\n".format(self.struts[n].BIndE))
     
     def plot(self, options=None):
-        """Plot turbine geometry."""
+        """Plot turbine geometry. This function does not work yet"""
         pass
     
     
@@ -679,7 +680,8 @@ if __name__ == "__main__":
     rot_n = [0, 0, 1]
     rot_p = [0, 0, 0]
     ref_ar = 1.0
-    turb_opts = {"REqR" : 0.5,
+    turb_opts = {"type" : "VAWT",
+                 "REqR" : 0.5,
                  "CR" : 0.1,
                  "HR" : 1.0,
                  "eta" : 0.5,
@@ -687,5 +689,5 @@ if __name__ == "__main__":
                  "CRs" : 0.1,
                  "TCs" : 0.12}
     turbine = Turbine(n_blade, n_belem, n_strut, n_selem, ref_r, rot_n,
-                      rot_p, ref_ar, turb_type="VAWT", **turb_opts)
+                      rot_p, ref_ar, **turb_opts)
     turbine.writefile("test")
