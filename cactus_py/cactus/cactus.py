@@ -105,6 +105,9 @@ class Case(object):
     A CACTUS case object for running a single simulation.
     
     Default geometry files will be same as case name and in same directory.
+    
+    If an input file with the case name exists in the working directory it
+    will not be loaded unless `loadconfig=True`.
     """
     def __init__(self, name, loadconfig=False):
         self.name = name
@@ -135,9 +138,17 @@ class Case(object):
         self.geomfile = name + ".geom"
         self.foil_data_file = "../../Airfoil_Section_Data/NACA_0015.dat"
         self.setconfig()
-    def creategeom(self):
+        if loadconfig: 
+            try: 
+                self.loadconfig()
+            except IOError:
+                pass
+    def creategeom(self, n_blade, n_belem, n_strut, s_selem, ref_r, rot_n,
+                   rot_p, ref_ar, turb_type=None, **kwargs):
         """Create new geometry file."""
-        pass
+        turbgeom = geom.Turbine(n_blade, n_belem, n_strut, s_selem, ref_r, 
+                                rot_n, rot_p, ref_ar, turb_type=turb_type, **kwargs)
+        turbgeom.writefile(self.name)
     def loadconfig(self):
         """loads a configuration file with the same name as the case, 
         inside the same directory."""
@@ -189,11 +200,11 @@ class Case(object):
                     elif i == "Ut":
                         self.tsr = float(v)
                     elif i == "GeomFilePath":
-                        self.geomfile = v
+                        self.geomfile = str(v)
                     elif i == "nSect":
                         self.nSect = int(v)
                     elif i == "AFDPath":
-                        self.foil_data_file = v
+                        self.foil_data_file = str(v)
         self.setconfig()
     def setconfig(self):
         """Sets configuration dictionaries and writes input file."""
@@ -232,7 +243,7 @@ class Case(object):
             f.write("&CaseInputs\n")
             for key, value in self.caseconfig.iteritems():
                 if "title" in key or "Path" in key:
-                    f.write("\t" + key + " = '" + str(value) + "'\n")
+                    f.write("\t" + key + " = '" + value + "'\n")
                 else:
                     f.write("\t" + key + " = " + str(value) + "\n")
             f.write("/End\n")
@@ -240,8 +251,7 @@ class Case(object):
         """Returns average power coefficient."""
         pass
     def run(self):
-        if self.inputfile == None:
-            raise RuntimeError("No input file")
+        self.writeconfig()
         if os.name == "nt":
             cm = 'C:/MinGW/msys/1.0/bin/bash.exe --login -c "cd \''
             cm += os.getcwd().replace('\\', '/') 
@@ -252,77 +262,30 @@ class Case(object):
     
 
 class PerfCurve(object):
+    """Object that represents a performance curve, or batch runs of cases."""
     def __init__(self, name):
         self.name = name
-        self.numconfig = {}
-        self.caseconfig = {}
-        # Numerical configuration parameters
-        self.GPFlag = 0
-        self.nr = 10
-        self.nti = 16
-        self.convrg = 0.0001
-        self.iut = 0
-        self.ifc = 0
-        self.ixterm = 0
-        self.ntif = 16
-        self.iutf = 1
-        self.nric = 9
-        self.convrgf = 0.0001
-        self.DiagOutFlag = 1
-        self.Output_ELFlag = 1
-        # Case configuration parameters
-        self.rho = 0.002378
-        self.vis = 0.3739E-6
-        self.tempr = 60.0
-        self.hBLRef = 56.57
-        self.slex = 0.0
-        self.hAG = 30.0
-        self.RPM = 70
-        self.GeomFilePath = name+".geom"
-        self.nSect = 1
-        self.AFDPath = "../../Airfoil_Section_Data/NACA_0015.dat"
-    def setconfig(self):
-        self.numconfig["GPFlag"] = self.GPFlag
-        self.numconfig["nr"] = self.nr
-        self.numconfig["nti"] = self.nti
-        self.numconfig["convrg"] = self.convrg
-        self.numconfig["iut"] = self.iut
-        self.numconfig["ifc"] = self.ifc
-        self.numconfig["ixterm"] = self.ixterm
-        self.numconfig["ntif"] = self.ntif
-        self.numconfig["iutf"] = self.iutf
-        self.numconfig["nric"] = self.nric
-        self.numconfig["convrgf"] = self.convrgf
-        self.numconfig["DiagOutFlag"] = self.DiagOutFlag
-        self.numconfig["Output_ELFlag"] = self.Output_ELFlag
-        self.caseconfig["jbtitle"] = self.name
-        self.caseconfig["rho"] = self.rho
-        self.caseconfig["vis"] = self.vis
-        self.caseconfig["tempr"] = self.tempr
-        self.caseconfig["hBLRef"] = self.hBLRef
-        self.caseconfig["slex"] = self.slex
-        self.caseconfig["hAG"] = self.hAG
-        self.caseconfig["RPM"] = self.RPM
-        self.caseconfig["GeomFilePath"] = self.GeomFilePath
-        self.caseconfig["nSect"] = self.nSect
-        self.caseconfig["AFDPath"] = self.AFDPath
     def run(self, tsr_start, tsr_stop, tsr_step):
         # Create empty power coefficient list
         self.cp = []
         self.setconfig()
         self.tsr = np.arange(tsr_start, tsr_stop+tsr_step, tsr_step)
         for tsr in self.tsr:
-            self.caseconfig["Ut"] = tsr
-            write_input_file(self.name, self.caseconfig, self.numconfig)
-            runcase(self.name)
-            self.cp.append(get_mean_cp(self.name))
+            case = Case(self.name+str(tsr))
+            case.tsr = tsr
+            case.run()
+            self.cp.append(case.calc_cp())
+        self.lastcase = case
         self.save()
     def save(self):
         with open(self.name+"_PerfCurve.json", "w") as f:
             data = {"tsr" : self.tsr.tolist(), "cp" : self.cp,
-                    "numconfig" : self.numconfig, 
-                    "caseconfig" : self.caseconfig}
+                    "numconfig_lastcase" : self.lastcase.numconfig, 
+                    "caseconfig_lastcase" : self.lastcase.caseconfig}
             f.write(json.dumps(data, indent=2))
+    def clean(self):
+        """Deletes all files associated with this performance curve."""
+        pass
     def plot(self):
         with open(self.name+"_PerfCurve.json") as f:
             data = json.load(f)
@@ -334,12 +297,9 @@ class PerfCurve(object):
     
     
 if __name__ == "__main__":
-#    os.chdir("../../Test/TestCase2")
-#    plt.close("all")
-#    pc = PerfCurve("TestVAWT2")
-#    pc.GeomFilePath = "../TestGeom/TestVAWT.geom"
-#    pc.run(2.0, 4.0, 0.5)
-#    pc.plot()
     case = Case("test")
-#    case.writeconfig()
-    case.loadconfig()
+    case.geomfile = "../../Test/TestGeom/TestHAWT.geom"
+    case.nr = 4
+#    case.creategeom(2, 5, 2, 5, 3.52, [0,0,1], [0,0,0], 31.5, turb_type="HAWT",
+#                    **geom.hawt_defaults)
+    case.run()

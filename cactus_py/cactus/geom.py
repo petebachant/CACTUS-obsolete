@@ -429,7 +429,7 @@ class Turbine(object):
                 # straight blades
                 rr = REqR*ones(np.shape(yB))
                 # Frontal area normalized by RefR^2
-                self.RefAR = 2*REqR*HR
+                self.ref_ar = 2*REqR*HR
                 # Fill element end geometry
                 deltac = (eta - 0.25)*CR
                 self.blades[0].CtoR = CR*ones((1, n_belem+1))
@@ -505,7 +505,7 @@ class Turbine(object):
             # Radius ratio function
             rB = np.linspace(HubRR, RMaxR, n_belem+1)
             # Frontal area normalized by RefR^2
-            self.RefAR = pi*RMaxR**2
+            self.ref_ar = pi*RMaxR**2
         
             # Fill element end data for first blade
             deltac = (eta - 0.25)*CR[0]
@@ -716,7 +716,6 @@ class Turbine(object):
                 f.write("\tEIndS:   {:d}\n".format(self.struts[n].EIndS))
                 f.write("\tBIndE:   {:d}\n".format(self.struts[n].BIndE))
                 f.write("\tEIndE:   {:d}\n".format(self.struts[n].BIndE))
-    
     def plot(self, options=None):
         """Plot turbine geometry. This function still needs to be written."""
         pass
