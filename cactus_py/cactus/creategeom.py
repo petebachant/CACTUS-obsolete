@@ -102,10 +102,6 @@ class Blade(object):
         self.ny = nR[:,1].transpose()
         self.nz = nR[:,2].transpose()
         
-    def update_area(self):
-        pass
-        # Put the code from UpdateBElemArea.m here
-        
     def calc_element_geom(self):
         """Calculates blade element geometry."""
         pass
@@ -134,12 +130,22 @@ class Strut(object):
     """
     def __init__(self, n_elem):
         self.n_elem = n_elem
-        self.SEx = zeros(1,n_elem+1)
-        self.SEy = zeros(1,n_elem+1)
-        self.SEz = zeros(1,n_elem+1)
-        self.CtoR = zeros(1,n_elem+1)
-        self.AreaR = zeros(1,n_elem)
         self.TtoC = 0
+        # Element end geometry
+        self.MCx = zeros(1,n_elem+1)
+        self.MCy = zeros(1,n_elem+1)
+        self.MCz = zeros(1,n_elem+1)
+        self.CtoR = zeros(1,n_elem+1)
+        # Element geometry
+        self.PEx = zeros(1, n_elem)
+        self.PEy = zeros(1, n_elem)
+        self.PEz = zeros(1, n_elem)
+        self.sEx = zeros(1, n_elem)
+        self.sEy = zeros(1, n_elem)
+        self.sEz = zeros(1, n_elem)
+        self.ECtoR = zeros(1, n_elem)
+        self.EAreaR = zeros(1, n_elem)
+        # Blade interference parameters
         self.BIndS = 0
         self.EIndS = 0
         self.BIndE = 1
@@ -151,19 +157,34 @@ class Strut(object):
         angle Theta (rad), using specified origin point (size 1 x 3).
         """
         # Rotate element locations
-        P = np.hstack((self.SEx, self.SEy, self.SEz))
+        P = np.vstack((self.SEx, self.SEy, self.SEz))
         PR = quatrot(P.conj().transpose(), theta, nR, origin)
-        self.SEx = PR[:, 0].conj().transpose()
-        self.SEy = PR[:, 1].conj().transpose()
-        self.SEz = PR[:, 2].conj().transpose()
-#        SR = S
-        
-    def update_area(self):
-        pass
+        self.MCx = PR[:, 0].conj().transpose()
+        self.MCy = PR[:, 1].conj().transpose()
+        self.MCz = PR[:, 2].conj().transpose()
+        # Calculate element geometry
+        self.calc_element_geom()
     
     def calc_element_geom(self):
         """Calculates strut element geometry."""
-        pass
+        for i in range(self.n_elem):
+            PE = np.hstack((self.MCx[i+1] + self.MCx[i],
+                            self.MCy[i+1] + self.MCy[i],
+                            self.MCz[i+1] + self.MCz[i]))/2
+            sE = np.hstack((self.MCx[i+1] - self.MCx[i],
+                            self.MCy[i+1] - self.MCy[i],
+                            self.MCz[i+1] - self.MCz[i]))
+            sEM = sqrt(np.sum(sE**2))
+            sE = sE/sEM
+            self.PEx(i) = PE[1]
+            self.PEy(i) = PE[2]
+            self.PEz(i) = PE[3]
+            self.sEx(i) = sE[1]
+            self.sEy(i) = sE[2]
+            self.sEz(i) = sE[3]
+            # Calc element area and chord
+            self.ECtoR[i] = (self.CtoR[i] + self.CtoR[i+1])/2
+            self.EAreaR[i] = sEM*self.ECtoR[i]
 
 
 class Turbine(object):
@@ -288,8 +309,8 @@ class Turbine(object):
             # Copy and rotate for other blades
             Phase = np.linspace(0, 2*pi, n_blade+1)
             for i in range(1, n_blade):
-                self.blades[i] = self.blades[0].rotate(Phase(i), T.RotN, T.RotP)
-            
+                self.blades[i] = self.blades[0].rotate(Phase(i), self.RotN, 
+                                                       self.RotP)
             # Fill struts on first blade
             if float(n_strut) % n_blade != 0:
                 raise RuntimeError('Number of struts must be a multiple of the\
