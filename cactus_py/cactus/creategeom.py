@@ -1,9 +1,8 @@
 """
 This module contains classes for constructing turbine geometry
-It replaces CreateBlade.m and CreateStrut.m
+It replaces the entire /CreateGeom folder of *.m files
 
 """
-
 from numpy import zeros, ones, sqrt, pi, sin, cos
 import numpy as np
 
@@ -62,45 +61,54 @@ class Blade(object):
     iSect: Airfoil section index for each element (size n_elem). Used in
         CACTUS to identify the airfoil data tables (defined in the CACTUS input
         file) to use with that element.
-    
     """
     def __init__(self, n_elem):
         self.n_elem = n_elem
-        self.QCx = zeros(1, self.n_elem+1)
-        self.QCy = zeros(1, self.n_elem+1)
-        self.QCz = zeros(1, self.n_elem+1)
-        self.nx = zeros(1, self.n_elem+1)
-        self.ny = zeros(1, self.n_elem+1)
-        self.nz = zeros(1, self.n_elem+1)
-        self.tx = zeros(1, self.n_elem+1)
-        self.ty = zeros(1, self.n_elem+1)
-        self.tz = zeros(1, self.n_elem+1)
-        self.CtoR = zeros(1, self.n_elem+1)
-        self.AreaR = zeros(1, self.n_elem)
-        self.iSect = ones(1, self.n_elem)
+        self.FlipN = 0
+        # Element end geometry
+        self.QCx = zeros(1, n_elem+1)
+        self.QCy = zeros(1, n_elem+1)
+        self.QCz = zeros(1, n_elem+1)
+        self.tx = zeros(1, n_elem+1)
+        self.ty = zeros(1, n_elem+1)
+        self.tz = zeros(1, n_elem+1)
+        self.CtoR = zeros(1, n_elem+1)
+        # Element geometry
+        self.PEx = zeros(1, n_elem)
+        self.PEy = zeros(1, n_elem)
+        self.PEz = zeros(1, n_elem)
+        self.tEx = zeros(1, n_elem)
+        self.tEy = zeros(1, n_elem)
+        self.tEz = zeros(1, n_elem)
+        self.nEx = zeros(1, n_elem)
+        self.nEy = zeros(1, n_elem)
+        self.nEz = zeros(1, n_elem)
+        self.sEx = zeros(1, n_elem)
+        self.sEy = zeros(1, n_elem)
+        self.sEz = zeros(1, n_elem)
+        self.ECtoR = zeros(1, n_elem)
+        self.EAreaR = zeros(1, n_elem)
+        self.iSect = ones(1, n_elem)
         
     def rotate(self, theta, nR, origin):
         """Rotates blade structure around normal vector nR (size 1 x 3) through
         angle theta (rad), using specified origin point (size 1 x 3)."""
         # Rotate QC locations
-        QC = [self.QCx, self.QCy, self.QCz]
-        QCR = quatrot(QC.transpose(), theta, nR, origin)
-        self.QCx = QCR[:,0].transpose()
-        self.QCy = QCR[:,1].transpose()
-        self.QCz = QCR[:,2].transpose()
+        QC = np.vstack((self.QCx, self.QCy, self.QCz))
+        QCR = quatrot(QC.conj().transpose(), theta, nR, origin)
+        self.QCx = QCR[:,0].conj().transpose()
+        self.QCy = QCR[:,1].conj().transpose()
+        self.QCz = QCR[:,2].conj().transpose()
         
         # Rotate n and t vectors
-        t = [self.tx, self.ty, self.tz]
-        tR = quatrot(t.transpose(),theta, nR, [0,0,0])
-        self.tx = tR[:,0].transpose()
-        self.ty = tR[:,1].transpose()
-        self.tz = tR[:,2].transpose()
+        t = np.vstack((self.tx, self.ty, self.tz))
+        tR = quatrot(t.conj().transpose(), theta, nR, [0,0,0])
+        self.tx = tR[:,0].conj().transpose()
+        self.ty = tR[:,1].conj().transpose()
+        self.tz = tR[:,2].conj().transpose()
         
-        n = [self.nx, self.ny, self.nz]
-        nR = quatrot(n.transpose(), theta, nR, [0,0,0])
-        self.nx = nR[:,0].transpose()
-        self.ny = nR[:,1].transpose()
-        self.nz = nR[:,2].transpose()
+        # Calculate element geometry
+        self.calc_element_geom()
         
     def calc_element_geom(self):
         """Calculates blade element geometry."""
