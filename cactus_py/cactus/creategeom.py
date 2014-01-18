@@ -1,7 +1,6 @@
 """
 This module contains classes for constructing turbine geometry
 It replaces the entire /CreateGeom folder of *.m files
-
 """
 from numpy import zeros, ones, sqrt, pi, sin, cos
 import numpy as np
@@ -25,7 +24,10 @@ def quatrot(v, theta, nR, origin):
     # Make origin array with same number of rows as number of input vectors
     oarray = origin*ones(np.shape(v))
     vO = v - oarray
-    p = np.hstack((zeros((np.shape(v)[0], 1)), vO))
+    if len(np.shape(v)) == 1:
+        p = np.hstack((0, vO))
+    else:
+        p = np.hstack((zeros((np.shape(v)[0], 1)), vO))
     # Rotation quaternion and conjugate
     q = np.hstack((cos(theta/2), nR*sin(theta/2)))
     qbar = np.hstack((q[0], -q[1:]))
@@ -66,29 +68,29 @@ class Blade(object):
         self.n_elem = n_elem
         self.FlipN = 0
         # Element end geometry
-        self.QCx = zeros(1, n_elem+1)
-        self.QCy = zeros(1, n_elem+1)
-        self.QCz = zeros(1, n_elem+1)
-        self.tx = zeros(1, n_elem+1)
-        self.ty = zeros(1, n_elem+1)
-        self.tz = zeros(1, n_elem+1)
-        self.CtoR = zeros(1, n_elem+1)
+        self.QCx = zeros((1, n_elem+1))
+        self.QCy = zeros((1, n_elem+1))
+        self.QCz = zeros((1, n_elem+1))
+        self.tx = zeros((1, n_elem+1))
+        self.ty = zeros((1, n_elem+1))
+        self.tz = zeros((1, n_elem+1))
+        self.CtoR = zeros((1, n_elem+1))
         # Element geometry
-        self.PEx = zeros(1, n_elem)
-        self.PEy = zeros(1, n_elem)
-        self.PEz = zeros(1, n_elem)
-        self.tEx = zeros(1, n_elem)
-        self.tEy = zeros(1, n_elem)
-        self.tEz = zeros(1, n_elem)
-        self.nEx = zeros(1, n_elem)
-        self.nEy = zeros(1, n_elem)
-        self.nEz = zeros(1, n_elem)
-        self.sEx = zeros(1, n_elem)
-        self.sEy = zeros(1, n_elem)
-        self.sEz = zeros(1, n_elem)
-        self.ECtoR = zeros(1, n_elem)
-        self.EAreaR = zeros(1, n_elem)
-        self.iSect = ones(1, n_elem)
+        self.PEx = zeros((1, n_elem))
+        self.PEy = zeros((1, n_elem))
+        self.PEz = zeros((1, n_elem))
+        self.tEx = zeros((1, n_elem))
+        self.tEy = zeros((1, n_elem))
+        self.tEz = zeros((1, n_elem))
+        self.nEx = zeros((1, n_elem))
+        self.nEy = zeros((1, n_elem))
+        self.nEz = zeros((1, n_elem))
+        self.sEx = zeros((1, n_elem))
+        self.sEy = zeros((1, n_elem))
+        self.sEz = zeros((1, n_elem))
+        self.ECtoR = zeros((1, n_elem))
+        self.EAreaR = zeros((1, n_elem))
+        self.iSect = ones((1, n_elem))
         
     def rotate(self, theta, nR, origin):
         """Rotates blade structure around normal vector nR (size 1 x 3) through
@@ -116,18 +118,18 @@ class Blade(object):
         FlipN = self.FlipN
         
         for i in range(n_elem):
-            PE = np.hstack((self.QCx[i+1]+self.QCx[i], 
-                            self.QCy[i+1]+self.QCy[i], 
-                            self.QCz[i+1]+self.QCz[i]))/2
-            sE = -np.hstack((self.QCx[i+1]-self.QCx[i], 
-                             self.QCy[i+1]-self.QCy[i], 
-                             self.QCz[i+1]-self.QCz[i])) 
+            PE = np.hstack((self.QCx[0, i+1]+self.QCx[0, i], 
+                            self.QCy[0, i+1]+self.QCy[0, i], 
+                            self.QCz[0, i+1]+self.QCz[0, i]))/2
+            sE = -np.hstack((self.QCx[0, i+1]-self.QCx[0, i], 
+                             self.QCy[0, i+1]-self.QCy[0, i], 
+                             self.QCz[0, i+1]-self.QCz[0, i])) 
             # nominal element spanwise direction set opposite to QC line in CACTUS
             sEM = sqrt(np.sum(sE**2))
             sE = sE/sEM
-            tE = np.hstack((self.tx[i+1]+self.tx[i], 
-                            self.ty[i+1]+self.ty[i], 
-                            self.tz[i+1]+self.tz[i]))/2
+            tE = np.hstack((self.tx[0, i+1]+self.tx[0, i], 
+                            self.ty[0, i+1]+self.ty[0, i], 
+                            self.tz[0, i+1]+self.tz[0, i]))/2
             # Force tE normal to sE
             tE = tE - (tE*sE.conj().transpose())*sE
             tEM = sqrt(np.sum(tE**2))
@@ -144,38 +146,38 @@ class Blade(object):
                 nE = -nE
                 sE = -sE
             
-            self.PEx[i] = PE[1]
-            self.PEy[i] = PE[2]
-            self.PEz[i] = PE[3]
-            self.tEx[i] = tE[1]
-            self.tEy[i] = tE[2]
-            self.tEz[i] = tE[3]
-            self.nEx[i] = nE[1]
-            self.nEy[i] = nE[2]
-            self.nEz[i] = nE[3]
-            self.sEx[i] = sE[1]
-            self.sEy[i] = sE[2]
-            self.sEz[i] = sE[3]
+            self.PEx[0, i] = PE[0]
+            self.PEy[0, i] = PE[1]
+            self.PEz[0, i] = PE[2]
+            self.tEx[0, i] = tE[0]
+            self.tEy[0, i] = tE[1]
+            self.tEz[0, i] = tE[2]
+            self.nEx[0, i] = nE[0]
+            self.nEy[0, i] = nE[1]
+            self.nEz[0, i] = nE[2]
+            self.sEx[0, i] = sE[0]
+            self.sEy[0, i] = sE[1]
+            self.sEz[0, i] = sE[2]
             
             # Calc element area and chord
             S = np.array([-0.25, 0.75])
             SR = np.array([0.75, -0.25])
             # Calc quad area from two triangular facets
-            Px = np.hstack([self.QCx[i]+S*self.CtoR[i]*self.tx[i], 
-                            self.QCx[i+1]+SR*self.CtoR[i+1]*self.tx[i+1], 
-                            self.QCx[i]-1/4*self.CtoR[i]*self.tx[i]])
-            Py = np.hstack([self.QCy[i]+S*self.CtoR[i]*self.ty[i], 
-                            self.QCy[i+1]+SR*self.CtoR[i+1]*self.ty[i+1], 
-                            self.QCy[i]-1/4*self.CtoR[i]*self.ty[i]])
-            Pz = np.hstack([self.QCz[i]+S*self.CtoR[i]*self.tz[i], 
-                            self.QCz[i+1]+SR*self.CtoR[i+1]*self.tz[i+1], 
-                            self.QCz[i]-1/4*self.CtoR[i]*self.tz[i]])
+            Px = np.hstack([self.QCx[0, i]+S*self.CtoR[0, i]*self.tx[0, i], 
+                            self.QCx[0, i+1]+SR*self.CtoR[0, i+1]*self.tx[0, i+1], 
+                            self.QCx[0, i]-1/4*self.CtoR[0, i]*self.tx[0, i]])
+            Py = np.hstack([self.QCy[0, i]+S*self.CtoR[0, i]*self.ty[0, i], 
+                            self.QCy[0, i+1]+SR*self.CtoR[0, i+1]*self.ty[0, i+1], 
+                            self.QCy[0, i]-1/4*self.CtoR[0, i]*self.ty[0, i]])
+            Pz = np.hstack([self.QCz[0, i]+S*self.CtoR[0, i]*self.tz[0, i], 
+                            self.QCz[0, i+1]+SR*self.CtoR[0, i+1]*self.tz[0, i+1], 
+                            self.QCz[0, i]-1/4*self.CtoR[0, i]*self.tz[0, i]])
             V = np.vstack([np.diff(Px), np.diff(Py), np.diff(Pz)])
             A1 = np.cross(V[:,0], V[:,1])/2
             A2 = np.cross(V[:,2], V[:,3])/2
-            self.EAreaR[i] = sqrt(np.sum(A1**2))+sqrt(np.sum(A2**2))
+            self.EAreaR[0, i] = sqrt(np.sum(A1**2))+sqrt(np.sum(A2**2))
             # Calc average element chord from area and span
-            self.ECtoR[i] = self.EAreaR[i]/sEM
+            self.ECtoR[0, i] = self.EAreaR[0, i]/sEM
 
 
 class Strut(object):
@@ -203,19 +205,19 @@ class Strut(object):
         self.n_elem = n_elem
         self.TtoC = 0
         # Element end geometry
-        self.MCx = zeros(1,n_elem+1)
-        self.MCy = zeros(1,n_elem+1)
-        self.MCz = zeros(1,n_elem+1)
-        self.CtoR = zeros(1,n_elem+1)
+        self.MCx = zeros((1, n_elem+1))
+        self.MCy = zeros((1, n_elem+1))
+        self.MCz = zeros((1, n_elem+1))
+        self.CtoR = zeros((1, n_elem+1))
         # Element geometry
-        self.PEx = zeros(1, n_elem)
-        self.PEy = zeros(1, n_elem)
-        self.PEz = zeros(1, n_elem)
-        self.sEx = zeros(1, n_elem)
-        self.sEy = zeros(1, n_elem)
-        self.sEz = zeros(1, n_elem)
-        self.ECtoR = zeros(1, n_elem)
-        self.EAreaR = zeros(1, n_elem)
+        self.PEx = zeros((1, n_elem))
+        self.PEy = zeros((1, n_elem))
+        self.PEz = zeros((1, n_elem))
+        self.sEx = zeros((1, n_elem))
+        self.sEy = zeros((1, n_elem))
+        self.sEz = zeros((1, n_elem))
+        self.ECtoR = zeros((1, n_elem))
+        self.EAreaR = zeros((1, n_elem))
         # Blade interference parameters
         self.BIndS = 0
         self.EIndS = 0
@@ -228,7 +230,7 @@ class Strut(object):
         angle Theta (rad), using specified origin point (size 1 x 3).
         """
         # Rotate element locations
-        P = np.vstack((self.SEx, self.SEy, self.SEz))
+        P = np.vstack((self.MCx, self.MCy, self.MCz))
         PR = quatrot(P.conj().transpose(), theta, nR, origin)
         self.MCx = PR[:, 0].conj().transpose()
         self.MCy = PR[:, 1].conj().transpose()
@@ -239,23 +241,23 @@ class Strut(object):
     def calc_element_geom(self):
         """Calculates strut element geometry."""
         for i in range(self.n_elem):
-            PE = np.hstack((self.MCx[i+1] + self.MCx[i],
-                            self.MCy[i+1] + self.MCy[i],
-                            self.MCz[i+1] + self.MCz[i]))/2
-            sE = np.hstack((self.MCx[i+1] - self.MCx[i],
-                            self.MCy[i+1] - self.MCy[i],
-                            self.MCz[i+1] - self.MCz[i]))
+            PE = np.hstack((self.MCx[0, i+1] + self.MCx[0, i],
+                            self.MCy[0, i+1] + self.MCy[0, i],
+                            self.MCz[0, i+1] + self.MCz[0, i]))/2
+            sE = np.hstack((self.MCx[0, i+1] - self.MCx[0, i],
+                            self.MCy[0, i+1] - self.MCy[0, i],
+                            self.MCz[0, i+1] - self.MCz[0, i]))
             sEM = sqrt(np.sum(sE**2))
             sE = sE/sEM
-            self.PEx[i] = PE[1]
-            self.PEy[i] = PE[2]
-            self.PEz[i] = PE[3]
-            self.sEx[i] = sE[1]
-            self.sEy[i] = sE[2]
-            self.sEz[i] = sE[3]
+            self.PEx[0, i] = PE[0]
+            self.PEy[0, i] = PE[1]
+            self.PEz[0, i] = PE[2]
+            self.sEx[0, i] = sE[0]
+            self.sEy[0, i] = sE[1]
+            self.sEz[0, i] = sE[2]
             # Calc element area and chord
-            self.ECtoR[i] = (self.CtoR[i] + self.CtoR[i+1])/2
-            self.EAreaR[i] = sEM*self.ECtoR[i]
+            self.ECtoR[0, i] = (self.CtoR[0, i] + self.CtoR[0, i+1])/2
+            self.EAreaR[0, i] = sEM*self.ECtoR[0, i]
 
 
 class Turbine(object):
@@ -284,16 +286,17 @@ class Turbine(object):
              Input empty to just create an empty turbine structure. If input 
              string is recognized, will fill arrays with actual data for given 
              turbine type using additional arguments defined below.
-    varargin: Additional args (comma separated) used for recognized turbine
-             types (see comments in code below for definition).
+    **kwargs: Additional args used for recognized turbine types (see comments 
+             in code below for definition).
     """
     def __init__(self, n_blade, n_belem, n_strut, n_selem, ref_r, rot_n,
                  rot_p, ref_ar, turb_type=None, **kwargs):
         
         self.n_blade = n_blade
-        self.n_strut=n_strut
+        self.n_strut = n_strut
+        rot_n = np.array(rot_n)
         self.rot_n = rot_n/sqrt(np.sum(rot_n**2)) # force normalize
-        self.rot_p = rot_p
+        self.rot_p = np.array(rot_p)
         self.ref_ar = ref_ar
         self.ref_r = ref_r
         self.turb_type = turb_type
@@ -488,9 +491,9 @@ class Turbine(object):
     def rotate(self, theta, nvec, origin):
         """Rotate the turbine."""
         # Rotate turbine rotation axis vector
-        self.rotn = quatrot(self.rotn, theta, nvec, (0,0,0))
+        self.rot_n = quatrot(self.rot_n, theta, nvec, [0,0,0])
         # Rotate turbine rotation origin point
-        self.rotp = quatrot(self.rotp, theta, nvec, origin)
+        self.rot_p = quatrot(self.rot_p, theta, nvec, origin)
         # Rotate blades and struts
         for blade in self.blades:
             blade.rotate(theta, nvec, origin)
@@ -507,8 +510,16 @@ class Turbine(object):
     
     
 if __name__ == "__main__":
-    vector = np.array([[1, 0, 0],[0, 3, 2],[1, 2, 3]])
-    nvector = (0, 1, 0)
-    origin = (0, 0, 0)
-    theta = pi/2
-    print quatrot(vector, theta, nvector, origin)
+#    quatrot([[1, 0, 0], [0, 1, 0]], pi, [0, 0, 1], [0, 0, 0])
+#    quatrot([1, 0, 0], pi, [0, 0, 1], [0, 0, 0])
+    n_blade = 2
+    n_belem = 10
+    n_strut = 2
+    n_selem = 10
+    ref_r = 1.0
+    rot_n = [0, 0, 1]
+    rot_p = [0, 0, 0]
+    ref_ar = 1.0
+    turbine = Turbine(n_blade, n_belem, n_strut, n_selem, ref_r, rot_n,
+                      rot_p, ref_ar)
+#    turbine.rotate(pi/4, rot_n, rot_p)
