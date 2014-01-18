@@ -20,46 +20,28 @@ def quatrot(v, theta, nR, origin):
     
     # Convert to numpy arrays
     v, nR, origin = np.array(v), np.array(nR), np.array(origin)
-
     # Force normalize nR
-    nR = nR/np.sqrt(np.sum(nR**2))
-    
+    nR = nR/np.sqrt(np.sum(nR**2))    
     # Quaternion form of v
-#    O = origin[ones(np.size(v,1),1), :] 
-#    O = origin
-    # Why are we using "O" as a variable name?
-    vO = v - O
-    p = np.array([np.zeros(v.shape[0], 1), vO]).reshape(1, -1)   
-#    p = [zeros(np.size(v,1),1),vO]
-    
+    # Make origin array with same number of rows as number of input vectors
+    oarray = origin*ones(np.shape(v))
+    vO = v - oarray
+    p = np.hstack((zeros((np.shape(v)[0], 1)), vO))
     # Rotation quaternion and conjugate
-#    q = np.matrix([cos(theta/2), [nR*sin(theta/2)]])
-    q = np.array([cos(theta/2), nR*sin(theta/2)]).reshape(1, -1)
-    qbar = np.array([q[0], - q[(2 -1):4]]).reshape(1, -1)
-#    qbar=[q[0], -q[1:3]]
-    
-    # These should be matrices
-#    QL = np.matrix([[q[0], -q[1], -q[2], -q[3]],
-#                    [q[1],  q[0], -q[3],  q[2]],
-#                    [q[2],  q[3],  q[0], -q[1]],
-#                    [q[3], -q[2],  q[1],  q[0]]])
-#       
-#    QbarR = np.matrix([[qbar[0], -qbar[1], -qbar[2], -qbar[3]],
-#                       [qbar[1],  qbar[0],  qbar[3], -qbar[2]],
-#                       [qbar[2], -qbar[3],  qbar[0],  qbar[1]],
-#                       [qbar[3],  qbar[2], -qbar[1],  qbar[0]]])
-    QL = np.array([q[0], -q[1], -q[2], -q[3], 
-                   q[1], q[0], -q[3], q[2], 
-                   q[2], q[3], q[0], - q[1], 
-                   q[3], - q[2], q[1], q[0]]).reshape(1, -1)
-    QbarR = np.array([qbar[0], -qbar[1], -qbar[2], -qbar[3], 
-                      qbar[1], qbar[0], qbar[3], -qbar[2], 
-                      qbar[2], -qbar[3], qbar[0], qbar[1], 
-                      qbar[3], qbar[2], -qbar[1], qbar[0]]).reshape(1, -1)
+    q = np.hstack((cos(theta/2), nR*sin(theta/2)))
+    qbar = np.hstack((q[0], -q[1:]))
+    QL = np.matrix([[q[0], -q[1], -q[2], -q[3]],
+                    [q[1],  q[0], -q[3],  q[2]],
+                    [q[2],  q[3],  q[0], -q[1]],
+                    [q[3], -q[2],  q[1],  q[0]]])
+    QbarR = np.matrix([[qbar[0], -qbar[1], -qbar[2], -qbar[3]],
+                       [qbar[1],  qbar[0],  qbar[3], -qbar[2]],
+                       [qbar[2], -qbar[3],  qbar[0],  qbar[1]],
+                       [qbar[3],  qbar[2], -qbar[1],  qbar[0]]])
     # Rotate p
-    pR = p*(QbarR*QL).transpose()
-#    vR = pR[:,2:4] + O
-    vR = pR[:, (2 -1):4] + O
+    p = np.matrix(p)
+    pR = p*(QbarR*QL).conj().transpose()
+    vR = pR[:, 1:] + oarray
     return vR
 
 class Blade(object):
@@ -448,7 +430,7 @@ class Turbine(object):
     
     
 if __name__ == "__main__":
-    vector = (1, 0, 0)
+    vector = np.array([[1, 0, 0],[0, 3, 2],[1, 2, 3]])
     nvector = (0, 1, 0)
     origin = (0, 0, 0)
     theta = pi/2
