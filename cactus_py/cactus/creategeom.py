@@ -383,8 +383,8 @@ class Turbine(object):
             # Copy and rotate for other blades
             Phase = np.linspace(0, 2*pi, n_blade+1)
             for i in range(1, n_blade):
-                self.blades[i] = self.blades[0].rotate(Phase[i], self.RotN, 
-                                                       self.RotP)
+                self.blades[i] = self.blades[0]
+                self.blades[i].rotate(Phase[i], self.RotN, self.RotP)
             # Fill struts on first blade
             if float(n_strut) % n_blade != 0:
                 raise RuntimeError('Number of struts must be a multiple of the\
@@ -400,7 +400,7 @@ class Turbine(object):
                 self.struts[i].MCx = zeros((1, n_selem+1))
                 self.struts[i].MCy = yS[i]*ones((1, n_selem+1))
                 self.struts[i].MCz = -np.linspace(0, rrS[i], n_selem+1)*np.ones((1, n_belem+1))
-                self.struts[i].CtoR=CRs*ones((1, n_selem+1))
+                self.struts[i].CtoR = CRs*ones((1, n_selem+1))
                 self.struts[i].TtoC = TCs
                 self.struts[i].BIndS = 0
                 self.struts[i].EIndS = 0
@@ -412,11 +412,10 @@ class Turbine(object):
             
             # Copy and rotate for other blades
             for i in range(1, n_blade):
-                for j in range(1, NSpB):
-                    SInd = (i - 1)*NSpB + j
-                    self.struts[SInd] = self.struts[j].rotate(Phase[i], 
-                                                              self.RotN, 
-                                                              self.RotP)
+                for j in range(NSpB):
+                    SInd = i*NSpB + j
+                    self.struts[SInd] = self.struts[j]
+                    self.struts[SInd].rotate(Phase[i], self.RotN, self.RotP)
                     self.struts[SInd].BIndE = i
 
         elif turb_type=='HAWT':
@@ -500,9 +499,15 @@ class Turbine(object):
         for strut in self.struts:
             strut.rotate(theta, nvec, origin)
             
-    def writefile(self):
+    def writefile(self, name):
         """Writes the *.geom file."""
-        pass
+        if name[-5:] != ".geom":
+            name = name + ".geom"
+        with open(name, "w") as f:
+            f.write("NBlade: " + str(self.n_blade) + "\n")
+            f.write("NStrut: " + str(self.n_strut) + "\n")
+            f.write("RotN: " + str(self.rot_n[0]))
+            f.write(" " + str(self.rot_n[1]) + " " + str(self.rot_n[2]) + "\n")
     
     def plot(self, options=None):
         """Plot turbine geometry."""
@@ -529,4 +534,4 @@ if __name__ == "__main__":
                  "TCs" : 0.12}
     turbine = Turbine(n_blade, n_belem, n_strut, n_selem, ref_r, rot_n,
                       rot_p, ref_ar, turb_type="VAWT", **turb_opts)
-#    turbine.rotate(pi/4, rot_n, rot_p)
+    turbine.writefile("test")
