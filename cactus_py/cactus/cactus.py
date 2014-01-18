@@ -249,7 +249,8 @@ class Case(object):
             f.write("/End\n")
     def calc_cp(self):
         """Returns average power coefficient."""
-        pass
+        self.cp = get_mean_cp(self.name)
+        return self.cp
     def run(self):
         self.writeconfig()
         if os.name == "nt":
@@ -262,21 +263,27 @@ class Case(object):
     
 
 class PerfCurve(object):
-    """Object that represents a performance curve, or batch runs of cases."""
+    """Object that represents a performance curve, or batch runs of cases.
+    Settings can be changed through the properties of `self.basecase`."""
     def __init__(self, name):
         self.name = name
+        self.basecase = Case(self.name)
     def run(self, tsr_start, tsr_stop, tsr_step):
         # Create empty power coefficient list
         self.cp = []
-        self.setconfig()
         self.tsr = np.arange(tsr_start, tsr_stop+tsr_step, tsr_step)
         for tsr in self.tsr:
-            case = Case(self.name+str(tsr))
+            case = self.basecase
             case.tsr = tsr
             case.run()
             self.cp.append(case.calc_cp())
         self.lastcase = case
         self.save()
+        os.remove(self.name+"_ElementData.csv")
+        os.remove(self.name+"_Param.csv")
+        os.remove(self.name+"_RevData.csv")
+        os.remove(self.name+"_TimeData.csv")
+        os.remove(self.name+".in")
     def save(self):
         with open(self.name+"_PerfCurve.json", "w") as f:
             data = {"tsr" : self.tsr.tolist(), "cp" : self.cp,
@@ -297,9 +304,14 @@ class PerfCurve(object):
     
     
 if __name__ == "__main__":
-    case = Case("test")
-    case.geomfile = "../../Test/TestGeom/TestHAWT.geom"
-    case.nr = 4
-#    case.creategeom(2, 5, 2, 5, 3.52, [0,0,1], [0,0,0], 31.5, turb_type="HAWT",
+#    case = Case("test")
+#    case.geomfile = "../../Test/TestGeom/TestHAWT.geom"
+#    case.nr = 4
+#    case.creategeom(2, 5, 0, 5, 3.52, [0,0,1], [0,0,0], 31.5, turb_type="HAWT",
 #                    **geom.hawt_defaults)
-    case.run()
+#    case.run()
+    pc = PerfCurve("test")
+    pc.basecase.geomfile = "../../Test/TestGeom/TestHAWT.geom"
+    pc.basecase.nr = 4
+    pc.run(4, 8, 0.25)
+    pc.plot()

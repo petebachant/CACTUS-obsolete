@@ -179,15 +179,15 @@ class Blade(object):
             S = np.array([-0.25, 0.75])
             SR = np.array([0.75, -0.25])
             # Calc quad area from two triangular facets
-            Px = np.hstack([self.QCx[0, i]+S*self.CtoR[0, i]*self.tx[0, i], 
-                            self.QCx[0, i+1]+SR*self.CtoR[0, i+1]*self.tx[0, i+1], 
-                            self.QCx[0, i]-1/4*self.CtoR[0, i]*self.tx[0, i]])
-            Py = np.hstack([self.QCy[0, i]+S*self.CtoR[0, i]*self.ty[0, i], 
-                            self.QCy[0, i+1]+SR*self.CtoR[0, i+1]*self.ty[0, i+1], 
-                            self.QCy[0, i]-1/4*self.CtoR[0, i]*self.ty[0, i]])
-            Pz = np.hstack([self.QCz[0, i]+S*self.CtoR[0, i]*self.tz[0, i], 
-                            self.QCz[0, i+1]+SR*self.CtoR[0, i+1]*self.tz[0, i+1], 
-                            self.QCz[0, i]-1/4*self.CtoR[0, i]*self.tz[0, i]])
+            Px = np.hstack([self.QCx[0, i] + S*self.CtoR[0, i]*self.tx[0, i], 
+                            self.QCx[0, i+1] + SR*self.CtoR[0, i+1]*self.tx[0, i+1], 
+                            self.QCx[0, i] - 0.25*self.CtoR[0, i]*self.tx[0, i]])
+            Py = np.hstack([self.QCy[0, i] + S*self.CtoR[0, i]*self.ty[0, i], 
+                            self.QCy[0, i+1] + SR*self.CtoR[0, i+1]*self.ty[0, i+1], 
+                            self.QCy[0, i] - 0.25*self.CtoR[0, i]*self.ty[0, i]])
+            Pz = np.hstack([self.QCz[0, i] + S*self.CtoR[0, i]*self.tz[0, i], 
+                            self.QCz[0, i+1] + SR*self.CtoR[0, i+1]*self.tz[0, i+1], 
+                            self.QCz[0, i] - 0.25*self.CtoR[0, i]*self.tz[0, i]])
             V = np.vstack([np.diff(Px), np.diff(Py), np.diff(Pz)])
             A1 = np.cross(V[:,0], V[:,1])/2
             A2 = np.cross(V[:,2], V[:,3])/2
@@ -574,83 +574,83 @@ class Turbine(object):
                 f.write("\tFlipN:   {:d}\n".format(self.blades[n].FlipN))
                 f.write("\tQCx:")
                 for i in range(np.shape(self.blades[n].QCx)[1]):
-                    f.write("   {:e}".format(self.blades[n].QCx[0,i]))
+                    f.write("  {:e}".format(self.blades[n].QCx[0,i]))
                 f.write("\n")
                 f.write("\tQCy:")
                 for i in range(np.shape(self.blades[n].QCy)[1]):
-                    f.write("   {:e}".format(self.blades[n].QCy[0,i]))
+                    f.write("  {:e}".format(self.blades[n].QCy[0,i]))
                 f.write("\n")
                 f.write("\tQCz:")
                 for i in range(np.shape(self.blades[n].QCz)[1]):
-                    f.write("   {:e}".format(self.blades[n].QCz[0,i]))
+                    f.write("  {:e}".format(self.blades[n].QCz[0,i]))
                 f.write("\n")
                 f.write("\ttx:")
                 for i in range(np.shape(self.blades[n].tx)[1]):
-                    f.write("   {:e}".format(self.blades[n].tx[0,i]))
+                    f.write("  {:e}".format(self.blades[n].tx[0,i]))
                 f.write("\n")
                 f.write("\tty:")
                 for i in range(np.shape(self.blades[n].ty)[1]):
-                    f.write("   {:e}".format(self.blades[n].ty[0,i]))
+                    f.write("  {:e}".format(self.blades[n].ty[0,i]))
                 f.write("\n")
                 f.write("\ttz:")
                 for i in range(np.shape(self.blades[n].tz)[1]):
-                    f.write("   {:e}".format(self.blades[n].tz[0,i]))
+                    f.write("  {:e}".format(self.blades[n].tz[0,i]))
                 f.write("\n")
                 f.write("\tCtoR:")
                 for i in range(np.shape(self.blades[n].CtoR)[1]):
-                    f.write("   {:e}".format(self.blades[n].CtoR[0,i]))
+                    f.write("  {:e}".format(self.blades[n].CtoR[0,i]))
                 f.write("\n")
                 f.write("\tPEx:")
                 for i in self.blades[n].PEx[0,:]:
-                    f.write("   {:e}".format(i))
+                    f.write("  {:e}".format(i))
                 f.write("\n")
                 f.write("\tPEy:")
                 for i in self.blades[n].PEy[0,:]:
-                    f.write("   {:e}".format(i))
+                    f.write("  {:e}".format(i))
                 f.write("\n")
                 f.write("\tPEz:")
                 for i in self.blades[n].PEz[0,:]:
-                    f.write("   {:e}".format(i))
+                    f.write("  {:e}".format(i))
                 f.write("\n")
                 f.write("\ttEx:")
                 for i in self.blades[n].tEx[0,:]:
-                    f.write("   {:e}".format(i))
+                    f.write("  {:e}".format(i))
                 f.write("\n")
                 f.write("\ttEy:")
                 for i in self.blades[n].tEy[0,:]:
-                    f.write("   {:e}".format(i))
+                    f.write("  {:e}".format(i))
                 f.write("\n")
                 f.write("\ttEz:")
                 for i in self.blades[n].tEz[0,:]:
-                    f.write("   {:e}".format(i))
+                    f.write("  {:e}".format(i))
                 f.write("\n")
                 f.write("\tnEx:")
                 for i in self.blades[n].nEx[0,:]:
-                    f.write("   {:e}".format(i))
+                    f.write("  {:e}".format(i))
                 f.write("\n")
                 f.write("\tnEy:")
                 for i in self.blades[n].nEy[0,:]:
-                    f.write("   {:e}".format(i))
+                    f.write("  {:e}".format(i))
                 f.write("\n")
                 f.write("\tnEz:")
                 for i in self.blades[n].nEz[0,:]:
-                    f.write("   {:e}".format(i))
+                    f.write("  {:e}".format(i))
                 f.write("\n")
                 f.write("\tsEx:")
                 for i in self.blades[n].sEx[0,:]:
-                    f.write("   {:e}".format(i))
+                    f.write("  {:e}".format(i))
                 f.write("\n")
                 f.write("\tsEy:")
                 for i in self.blades[n].sEy[0,:]:
-                    f.write("   {:e}".format(i))
+                    f.write("  {:e}".format(i))
                 f.write("\n")
                 f.write("\tsEz:")
                 for i in self.blades[n].sEz[0,:]:
-                    f.write("   {:e}".format(i))
+                    f.write("  {:e}".format(i))
                 f.write("\n")
                 f.write("\tECtoR:")
                 for i in self.blades[n].ECtoR[0,:]:
-                    f.write("   {:e}".format(i))
+                    f.write("  {:e}".format(i))
                 f.write("\n")
                 f.write("\tEAreaR:")
                 for i in self.blades[n].EAreaR[0,:]:
@@ -658,64 +658,64 @@ class Turbine(object):
                 f.write("\n")
                 f.write("\tiSect:")
                 for i in self.blades[n].iSect[0,:]:
-                    f.write("   {:d}".format(int(i)))
+                    f.write("  {:d}".format(int(i)))
                 f.write("\n")
             for n in range(self.n_strut):
                 f.write("Strut " + str(n+1) + ":\n")
-                f.write("\tNElem:   {:d}\n".format(self.struts[n].n_elem))
+                f.write("\tNElem:  {:d}\n".format(self.struts[n].n_elem))
                 f.write("\tTtoC:  {:e}\n".format(self.struts[n].TtoC))
                 f.write("\tMCx:")
                 for i in range(np.shape(self.struts[n].MCx)[1]):
-                    f.write("   {:e}".format(self.struts[n].MCx[0,i]))
+                    f.write("  {:e}".format(self.struts[n].MCx[0,i]))
                 f.write("\n")
                 f.write("\tMCy:")
                 for i in range(np.shape(self.struts[n].MCy)[1]):
-                    f.write("   {:e}".format(self.struts[n].MCy[0,i]))
+                    f.write("  {:e}".format(self.struts[n].MCy[0,i]))
                 f.write("\n")
                 f.write("\tMCz:")
                 for i in range(np.shape(self.struts[n].MCz)[1]):
-                    f.write("   {:e}".format(self.struts[n].MCz[0,i]))
+                    f.write("  {:e}".format(self.struts[n].MCz[0,i]))
                 f.write("\n")
                 f.write("\tCtoR:")
                 for i in range(np.shape(self.struts[n].CtoR)[1]):
-                    f.write("   {:e}".format(self.struts[n].CtoR[0,i]))
+                    f.write("  {:e}".format(self.struts[n].CtoR[0,i]))
                 f.write("\n")
                 f.write("\tPEx:")
                 for i in range(np.shape(self.struts[n].PEx)[1]):
-                    f.write("   {:e}".format(self.struts[n].PEx[0,i]))
+                    f.write("  {:e}".format(self.struts[n].PEx[0,i]))
                 f.write("\n")
                 f.write("\tPEy:")
                 for i in range(np.shape(self.struts[n].PEy)[1]):
-                    f.write("   {:e}".format(self.struts[n].PEy[0,i]))
+                    f.write("  {:e}".format(self.struts[n].PEy[0,i]))
                 f.write("\n")
                 f.write("\tPEz:")
                 for i in range(np.shape(self.struts[n].PEz)[1]):
-                    f.write("   {:e}".format(self.struts[n].PEz[0,i]))
+                    f.write("  {:e}".format(self.struts[n].PEz[0,i]))
                 f.write("\n")
                 f.write("\tsEx:")
                 for i in range(np.shape(self.struts[n].sEx)[1]):
-                    f.write("   {:e}".format(self.struts[n].sEx[0,i]))
+                    f.write("  {:e}".format(self.struts[n].sEx[0,i]))
                 f.write("\n")
                 f.write("\tsEy:")
                 for i in range(np.shape(self.struts[n].sEy)[1]):
-                    f.write("   {:e}".format(self.struts[n].sEy[0,i]))
+                    f.write("  {:e}".format(self.struts[n].sEy[0,i]))
                 f.write("\n")
                 f.write("\tsEz:")
                 for i in range(np.shape(self.struts[n].sEz)[1]):
-                    f.write("   {:e}".format(self.struts[n].sEz[0,i]))
+                    f.write("  {:e}".format(self.struts[n].sEz[0,i]))
                 f.write("\n")
                 f.write("\tECtoR:")
                 for i in range(np.shape(self.struts[n].ECtoR)[1]):
-                    f.write("   {:e}".format(self.struts[n].ECtoR[0,i]))
+                    f.write("  {:e}".format(self.struts[n].ECtoR[0,i]))
                 f.write("\n")
                 f.write("\tEAreaR:")
                 for i in range(np.shape(self.struts[n].EAreaR)[1]):
-                    f.write("   {:e}".format(self.struts[n].EAreaR[0,i]))
+                    f.write("  {:e}".format(self.struts[n].EAreaR[0,i]))
                 f.write("\n")
-                f.write("\tBIndS:   {:d}\n".format(self.struts[n].BIndS))
-                f.write("\tEIndS:   {:d}\n".format(self.struts[n].EIndS))
-                f.write("\tBIndE:   {:d}\n".format(self.struts[n].BIndE))
-                f.write("\tEIndE:   {:d}\n".format(self.struts[n].BIndE))
+                f.write("\tBIndS:  {:d}\n".format(self.struts[n].BIndS))
+                f.write("\tEIndS:  {:d}\n".format(self.struts[n].EIndS))
+                f.write("\tBIndE:  {:d}\n".format(self.struts[n].BIndE))
+                f.write("\tEIndE:  {:d}\n".format(self.struts[n].BIndE))
     def plot(self, options=None):
         """Plot turbine geometry. This function still needs to be written."""
         pass
@@ -725,8 +725,8 @@ if __name__ == "__main__":
     n_blade = 2
     n_belem = 5
     n_strut = 0
-    n_selem = 5
-    ref_r = 1.0
+    n_selem = 0
+    ref_r = 18.15
     rot_n = [0, 0, 1]
     rot_p = [0, 0, 0]
     ref_ar = 1.0
@@ -740,4 +740,5 @@ if __name__ == "__main__":
     turb_opts = hawt_defaults
     turbine = Turbine(n_blade, n_belem, n_strut, n_selem, ref_r, rot_n,
                       rot_p, ref_ar, turb_type="HAWT", **turb_opts)
-    turbine.writefile("test")
+    print turbine.blades[0].tz
+#    turbine.writefile("test")
