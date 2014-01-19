@@ -4,7 +4,6 @@ Copyright (c) 2013, Sandia Corporation.  Under the terms of Contract
 DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
 certain rights in this software. 
 
-
 Building and installing
 -----------------------
 Also see `install.txt`
@@ -28,7 +27,8 @@ Also see `install.txt`
 
 Usage
 -----
-These instructions are for running from a shell or command line, 
+These instructions are for running from a shell or command line. For automation with Python
+see the "Python interface" section below. 
 ### Linux
   * cd into project directory
   * Run `cactus InputFileName.in`
