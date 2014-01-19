@@ -268,7 +268,7 @@ class PerfCurve(object):
     def __init__(self, name):
         self.name = name
         self.basecase = Case(self.name)
-    def run(self, tsr_start, tsr_stop, tsr_step):
+    def run(self, tsr_start, tsr_stop, tsr_step, clean=True):
         # Create empty power coefficient list
         self.cp = []
         self.tsr = np.arange(tsr_start, tsr_stop+tsr_step, tsr_step)
@@ -279,11 +279,8 @@ class PerfCurve(object):
             self.cp.append(case.calc_cp())
         self.lastcase = case
         self.save()
-        os.remove(self.name+"_ElementData.csv")
-        os.remove(self.name+"_Param.csv")
-        os.remove(self.name+"_RevData.csv")
-        os.remove(self.name+"_TimeData.csv")
-        os.remove(self.name+".in")
+        if clean:
+            self.clean()
     def save(self):
         with open(self.name+"_PerfCurve.json", "w") as f:
             data = {"tsr" : self.tsr.tolist(), "cp" : self.cp,
@@ -291,8 +288,13 @@ class PerfCurve(object):
                     "caseconfig_lastcase" : self.lastcase.caseconfig}
             f.write(json.dumps(data, indent=2))
     def clean(self):
-        """Deletes all files associated with this performance curve."""
-        pass
+        """Deletes all files associated with the last run of the performance
+        curve."""
+        os.remove(self.name+"_ElementData.csv")
+        os.remove(self.name+"_Param.csv")
+        os.remove(self.name+"_RevData.csv")
+        os.remove(self.name+"_TimeData.csv")
+        os.remove(self.name+".in")
     def plot(self):
         with open(self.name+"_PerfCurve.json") as f:
             data = json.load(f)
