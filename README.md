@@ -5,12 +5,11 @@ DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
 certain rights in this software. 
 
 
-Building and installing on Linux
-================================
+Building and installing
+-----------------------
 Also see `install.txt`
 
-Ubuntu
-------
+### Linux (Ubuntu)
   * Install gfortran if not already installed: 
     * From a terminal `sudo apt-get update`
     * `sudo apt-get install gfortran`
@@ -22,50 +21,52 @@ Ubuntu
     system path.
     * `gedit ~/.bashrc` to add a folder to the system path.
 
-
-Building and installing on Windows
-==================================
+### Windows
   * Download and install MinGW (32-bit) and MSYS (http://mingw.org)
   * Open MinGW bash in this directory and execute `make`
   * Execute `make install` (Note: this assumes default MinGW path)
 
-
 Usage
-=====
-Linux
 -----
+These instructions are for running from a shell or command line, 
+### Linux
   * cd into project directory
   * Run `cactus InputFileName.in`
 
-Windows
--------
+### Windows
   * Open MinGW bash in project directory (where the `*.in` file is located)
   * Run `cactus InputFileName.in`
   
-  
 Python interface
-================
-An experimental Python 2.7 interface is provided in the `cactus_py` directory. 
-This package provides functions for reading CACTUS data and a class for running a batch 
-of CACTUS runs to create a performance curve. An example script is located in
-`Test/TestCase1/testhawt.py`
+----------------
+An Python 2.7 interface is provided in the `cactus_py` directory. This package provides 
+functions for reading CACTUS data and classes for running cases and batches of CACTUS cases 
+to create performance curves.
 
-Installation
-------------
+### Installation
 Inside the `cactus_py` directory, run `python setup.py install`
 
-Dependencies
-------------
+### Dependencies
   * Numpy
   * matplotlib
   * pandas
   
-Usage
------
-See `Test/TestCase1/testhawt.py` for a simple example script.
+### Usage
+#### Running a case
+``` python
+>>> from cactus import Case
+>>> c = Case("TestHAWT_1")
+>>> c.geomfile = "../TestGeom/TestHAWT.geom"
+>>> c.run()
+...
+>>> c.calc_cp()
+0.24711726000000006
+```
 
+#### Running and plotting a performance curve.
+See `Test/TestCase1/testhawt.py`.
 
 3rd party libraries: LAPACK and BLAS
-====================================
+------------------------------------
 Included in the `lib` directory. Prebuilt for MinGW-Win32.
 http://icl.cs.utk.edu/lapack-for-windows/lapack/#libraries_mingw
