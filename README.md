@@ -63,7 +63,7 @@ Inside the `cactus_py` directory, run `python setup.py install`
 0.24711726000000006
 ```
 
-#### Running and plotting a performance curve.
+#### Running and plotting a performance curve
 See `Test/TestCase1/testhawt.py`.
 
 3rd party libraries: LAPACK and BLAS
