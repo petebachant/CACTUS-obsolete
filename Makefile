@@ -58,13 +58,13 @@ $(OBJf95):$(SRCDIR)%.o : $(SRCDIR)%.f95
 	mv $(@F) ${SRCDIR}
 
 install:
-	mkdir /usr/local/include/cactus
-	cp ./build/cactus.exe /usr/local/include/cactus
+	cp ./build/cactus /usr/local/bin/cactus
 	
 uninstall:
-	rm -rf /usr/local/include/cactus
+	rm -rf /usr/local/bin/cactus
 
 clean :
+	rm -rf ./build
 	rm -f $(SRCDIR)/*.o
 	rm -f $(MODDIR)/*.o
 	rm -f $(MODDIR)/*.mod
