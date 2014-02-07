@@ -8,17 +8,15 @@ Building and installing
 -----------------------
 Also see `install.txt`
 
-### Linux (Ubuntu)
+### Linux (Ubuntu or similar)
   * Install gfortran if not already installed: 
     * From a terminal `sudo apt-get update`
     * `sudo apt-get install gfortran`
   * Install LAPACK and BLAS:
 	* `sudo apt-get install liblapack-dev`
 	* `sudo apt-get install libblas-dev`
-  * Inside this directory run `make -f makefile.gfortran`
-  * Locate the cactus executable in the directory above, and place inside a directory on the
-    system path.
-    * `gedit ~/.bashrc` to add a folder to the system path.
+  * Inside this directory run `make`
+  * `make install`
 
 ### Windows
   * Download and install MinGW (32-bit) and MSYS (http://mingw.org)
@@ -29,11 +27,12 @@ Usage
 -----
 These instructions are for running from a shell or command line. For automation with Python
 see the "Python interface" section below. 
+
 ### Linux
   * cd into project directory
   * Run `cactus InputFileName.in`
 
-### Windows
+### Windows (MinGW)
   * Open MinGW bash in project directory (where the `*.in` file is located)
   * Run `cactus InputFileName.in`
   
