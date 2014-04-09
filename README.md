@@ -43,7 +43,7 @@ functions for reading CACTUS data and classes for running cases and batches of C
 to create performance curves.
 
 ### Installation
-Inside the `cactus_py` directory, run `python setup.py install`
+Inside the `cactus_py` directory, run `python setup.py install`. Note that Linux users may require superuser privileges to run this command. 
 
 ### Dependencies
   * Numpy
