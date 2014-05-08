@@ -3,3 +3,6 @@ cactus_py/build
 *.csv
 *.json
 *.pyc
+build/
+*.o
+*.mod
