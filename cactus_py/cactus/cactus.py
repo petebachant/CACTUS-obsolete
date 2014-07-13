@@ -9,7 +9,7 @@ import pandas as pd
 import subprocess
 import os
 import json
-import geom
+from . import geom
 
 # Translation dictionary for quantities printed in CSV file
 quantities = {"t" : " Normalized Time (-)",
@@ -69,18 +69,18 @@ def plot_time_data(casename, quantity):
 def get_mean_cp(casename):
     data = read_rev_data(casename)
     cp = data["Power Coeff. (-)"]
-    meancp = np.mean(cp[len(cp)/2:])
+    meancp = np.mean(cp[int(len(cp)/2):])
     return meancp
     
 def write_input_file(name, casedict, configdict):
     casedict["jbtitle"] = name
     with open(name+".in", "w") as f:
         f.write("&ConfigInputs\n")
-        for key, value in configdict.iteritems():
+        for key, value in configdict.items():
             f.write("\t" + key + " = " + str(value) + "\n")
         f.write("/End\n")
         f.write("&CaseInputs\n")
-        for key, value in casedict.iteritems():
+        for key, value in casedict.items():
             if "title" in key or "Path" in key:
                 f.write("\t" + key + " = '" + str(value) + "'\n")
             else:
@@ -237,11 +237,11 @@ class Case(object):
         self.setconfig()
         with open(self.name+".in", "w") as f:
             f.write("&ConfigInputs\n")
-            for key, value in self.numconfig.iteritems():
+            for key, value in self.numconfig.items():
                 f.write("\t" + key + " = " + str(value) + "\n")
             f.write("/End\n")
             f.write("&CaseInputs\n")
-            for key, value in self.caseconfig.iteritems():
+            for key, value in self.caseconfig.items():
                 if "title" in key or "Path" in key:
                     f.write("\t" + key + " = '" + value + "'\n")
                 else:
