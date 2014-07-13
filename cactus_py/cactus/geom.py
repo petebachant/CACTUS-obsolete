@@ -2,6 +2,7 @@
 This module contains classes for constructing turbine geometry.
 It replaces the /CreateGeom folder of *.m files
 """
+from __future__ import division, print_function
 from numpy import zeros, ones, sqrt, pi, sin, cos
 import numpy as np
 
@@ -740,5 +741,5 @@ if __name__ == "__main__":
     turb_opts = hawt_defaults
     turbine = Turbine(n_blade, n_belem, n_strut, n_selem, ref_r, rot_n,
                       rot_p, ref_ar, turb_type="HAWT", **turb_opts)
-    print turbine.blades[0].tz
+    print(turbine.blades[0].tz)
 #    turbine.writefile("test")
