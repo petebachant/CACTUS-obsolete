@@ -16,7 +16,7 @@ Also see `install.txt`
 	* `sudo apt-get install liblapack-dev`
 	* `sudo apt-get install libblas-dev`
   * Inside this directory run `make`
-  * `make install`
+  * `sudo make install`
 
 ### Windows
   * Download and install MinGW (32-bit) and MSYS (http://mingw.org)
