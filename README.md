@@ -38,7 +38,7 @@ see the "Python interface" section below.
   
 Python interface
 ----------------
-An Python 2.7 interface is provided in the `cactus_py` directory. This package provides 
+An Python interface is provided in the `cactus_py` directory. This package provides 
 functions for reading CACTUS data and classes for running cases and batches of CACTUS cases 
 to create performance curves.
 
