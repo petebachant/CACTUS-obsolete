@@ -36,7 +36,7 @@ COMPILER = gfortran
 # these prototypes cant be explicitly included a-priori in the code that uses the module (ala .h files in C). Modules used in
 # other modules must be compiled first...
 ./build/cactus : $(OBJMODUTILf95) $(OBJMODf95) $(OBJf95)  
-	mkdir ./build
+	mkdir -p build
 	$(COMPILER) -o $@ $(LINKOPT) $(OBJMODUTILf95) $(OBJMODf95) $(OBJf95)   $(LIBS)
 
 # Secondary goals: rules for OBJ. If Makefile or include files are changed, update
