@@ -200,7 +200,7 @@ CONTAINS
         Cfturb = 0.044 / ReS**(1.0/6.0) ! Turbulent friction drag coefficient
         Cdturb = 2.0 * Cfturb * (1.0 + 2.0*st + 60.0*st**4) ! Turbulent drag coefficient
         Fblend = 0.5 * (1.0 + TANH((LOG10(ReS)-LOG10(ReCrit))/0.2)) ! Blending function for transition between laminar and turbulent drag 
-        Struts(SInd)%Cd0(EInd) = (1.0-Fblend) * Cdlam + Fblend * Cdturb ! Profile drag coefficient
+        Struts(SInd)%Cd0(EInd) = 1.0
 
 
     End SUBROUTINE StrutElemCoeffs
