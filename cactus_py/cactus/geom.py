@@ -385,11 +385,11 @@ class Turbine(object):
         self.struts = []
 
         # Create blades
-        for i in xrange(n_blade):
+        for i in range(n_blade):
             self.blades.append(Blade(n_belem))
 
         # Create struts
-        for i in xrange(n_strut):
+        for i in range(n_strut):
             self.struts.append(Strut(n_selem)) 
 
         # Fill geometry if turbine type recognized
