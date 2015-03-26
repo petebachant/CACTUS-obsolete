@@ -209,8 +209,9 @@ PROGRAM CACTUS
         end if
     end if
 
-    ! If wake update interval set to a negative number, set next wake update iteration to -1 (no wake velocity updates will be performed)
-    ! Otherwise, make the first update on the second iteration (when the wake first appears)
+    ! If wake update interval set to a negative number, set next wake update 
+    ! iteration to -1 (no wake velocity updates will be performed) Otherwise, 
+    ! make the first update on the second iteration (when the wake first appears)
     if (iut < 0) then
         nsw=-1
     else
@@ -223,8 +224,9 @@ PROGRAM CACTUS
     end if
 
     ! Blade and strut geometry setup. 
-    ! Global axes: x is oriented with the nominal freestream flow direction, y is in the vertically upward direction (opposite gravity),
-    ! z direction from RHR (to the right when looking in the streamwise direction).
+    ! Global axes: x is oriented with the nominal freestream flow direction, 
+    ! y is in the vertically upward direction (opposite gravity), z direction 
+    ! from RHR (to the right when looking in the streamwise direction).
     CALL BGeomSetup()
     CALL SGeomSetup()
     if (Itower.EQ.1) Then
