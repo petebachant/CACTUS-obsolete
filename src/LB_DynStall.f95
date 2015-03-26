@@ -9,7 +9,7 @@ SUBROUTINE LB_DynStall(nElem,CLstat,CDstat,alphaL,alpha5,umach,Re,SectInd,CL,CD)
     real :: CLstat, CDstat, alphaL, alpha5, umach, Re, CL, CD
     integer :: SectInd, nElem
 
-    real :: AOA0, CLID, Trans, dCLRefLE, dAOARefLE, AOARefLE, CLstatF, C, C1, 
+    real :: AOA0, CLID, Trans, dCLRefLE, dAOARefLE, AOARefLE, CLstatF, C, C1 
     real :: CLIDF, CLRatio, CLsep, CLF, dCDF, KD, CLa, NOF, dCLv, dCDv, acut
 
     ! Leishman-Beddoes dynamic stall model (incompressible reduction).
