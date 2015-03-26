@@ -9,7 +9,8 @@ SUBROUTINE LB_DynStall(nElem,CLstat,CDstat,alphaL,alpha5,umach,Re,SectInd,CL,CD)
     real :: CLstat, CDstat, alphaL, alpha5, umach, Re, CL, CD
     integer :: SectInd, nElem
 
-    real :: AOA0, CLID, Trans, dCLRefLE, dAOARefLE, AOARefLE, CLstatF, C, C1, CLIDF, CLRatio, CLsep, CLF, dCDF, KD, CLa, NOF, dCLv, dCDv, acut
+    real :: AOA0, CLID, Trans, dCLRefLE, dAOARefLE, AOARefLE, CLstatF, C, C1, 
+    real :: CLIDF, CLRatio, CLsep, CLF, dCDF, KD, CLa, NOF, dCLv, dCDv, acut
 
     ! Leishman-Beddoes dynamic stall model (incompressible reduction).
 
@@ -64,7 +65,9 @@ SUBROUTINE LB_DynStall(nElem,CLstat,CDstat,alphaL,alpha5,umach,Re,SectInd,CL,CD)
     ! force limits on lagged F (needed due to discretization error...)
     F(nElem)=min(max(F(nElem),0.0),1.0)
 
-    ! Calc dynamic CL due to TE separation as fairing between fully attached and fully separated predictions from the Kirchoff approximation at current AOA
+    ! Calc dynamic CL due to TE separation as fairing between fully attached 
+    ! and fully separated predictions from the Kirchoff approximation at 
+    ! current AOA
     if (abs(CLID)<0.001) then
         CLRatio=999
     else
@@ -92,16 +95,21 @@ SUBROUTINE LB_DynStall(nElem,CLstat,CDstat,alphaL,alpha5,umach,Re,SectInd,CL,CD)
     CLF=CLsep+CLID*0.25*(F(nElem)+2.0*sqrt(F(nElem)))
     dCDF=KD*(CLstat-CLF)*sign(1.0,CLstat)
 
-    ! LE vortex lift component, dCNv is a lagged change in the added normal force due
-    ! to LE vortex shedding. Assumed to affect lift coeff as an added circulation...
+    ! LE vortex lift component, dCNv is a lagged change in the added normal 
+    ! force due to LE vortex shedding. Assumed to affect lift coeff as an added
+    ! circulation...
     dCLv=dCNv(nElem)*cos(alpha5)
     dCDv=dCNv(nElem)*sin(alpha5)
-    ! vortex feed is given by the rate at which lift (circulation) is being shed due to dynamic separation. Lift component due to separation is defined by the
-    ! difference between the ideal lift and the lift including dynamic separation effects.
+    ! vortex feed is given by the rate at which lift (circulation) is being 
+    ! shed due to dynamic separation. Lift component due to separation is 
+    ! defined by the difference between the ideal lift and the lift including 
+    ! dynamic separation effects.
     cv(nElem)=CLID-CLF
     dcv(nElem)=cv(nElem)-cv_Last(nElem)
-    ! If the sign of dcv is opposite the reference LE CL, set to zero to disallow negative vorticity from shedding from the leading edge. Also, limit the model 
-    ! at AOA>acut or if the magnitude of the reference CL is decreasing...
+    ! If the sign of dcv is opposite the reference LE CL, set to zero to 
+    ! disallow negative vorticity from shedding from the leading edge. Also, 
+    ! limit the model at AOA>acut or if the magnitude of the reference CL is 
+    ! decreasing...
     acut=50.0*conrad
     if (sign(1.0,dcv(nElem)*CLRefLE(nElem))<0 .OR. abs(alphaL-AOA0)>acut .OR. CLRateFlag(nElem)<0) then
         dcv=0.0

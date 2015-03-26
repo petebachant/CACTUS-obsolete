@@ -124,7 +124,7 @@ CONTAINS
     End SUBROUTINE dystl_init_BV
 
     SUBROUTINE LB_EvalIdealCL(AOA,AOA0,CLa,RefFlag,CLID)
-
+        ! Evaluates ideal lift coefficient curve`CLID` at given AOA
         ! AOA inputs in radians
         ! AOA0 is zero lift AOA
         ! RefFlag defines whether to output reference CL or ideal CL
