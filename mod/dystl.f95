@@ -182,8 +182,9 @@ CONTAINS
     SUBROUTINE LB_UpdateStates(nb,nbe)
 
         ! Update states for the LB model 
-        ! Note dynstall should be included eventually in an expanded blade module, at which point it would have 
-        ! access to the geometry info it needs...
+        ! Note dynstall should be included eventually in an expanded blade 
+        ! module, at which point it would have access to the geometry info it 
+        ! needs...
 
         integer :: nb, nbe      
 
