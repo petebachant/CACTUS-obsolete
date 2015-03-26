@@ -256,21 +256,22 @@ PROGRAM CACTUS
     ! Normalization parameters for geometry and performance outputs
     romega=2.0*pi*Rmax*rpm/60.0                                       
     uinf=romega/ut 
-    DT=DelT/ut                                      ! normalized simulation timestep (dt*Uinf/Rmax)      
+    DT=DelT/ut ! normalized simulation timestep (dt*Uinf/Rmax)      
 
     gustT = gusttime * uinf / Rmax
     gustA = gustamp / uinf
 
     rem=rho*uinf*Rmax/vis                                          
 
-    if (Incompr .eq. 1) then			! incompressible/compressible flow switch (used by dynamic stall model)
+    if (Incompr .eq. 1) then ! incompressible/compressible flow switch (used by dynamic stall model)
         Minf = 0.0
     else
         Minf=uinf/sqrt(1.4*1716.0*(tempr+459.6))
     end if
 
-    ! Setup vortex core radius for bound vorticity based on max chord, and for trailing and spanwise wake based on 
-    ! temporal and spatial discretization levels, respectively.
+    ! Setup vortex core radius for bound vorticity based on max chord, and 
+    ! for trailing and spanwise wake based on temporal and spatial 
+    ! discretization levels, respectively.
     if (ivtxcor > 0) then
         vRad_B = CrRef*VCRFB
         vRad_T = dSGeom*VCRFT
